@@ -1,0 +1,474 @@
+/* ==========================================================================
+   淡水河邊的神奇馬偕 AR · Scene 1「登陸滬尾」樣式
+   這份檔案的內容已經完整寫進 index.html 的 <style> 裡，
+   index.html 可以直接雙擊打開，不需要這個檔案。
+   這裡單獨列出來，是方便你讀、方便你改。
+   ========================================================================== */
+
+/* ================= Scene 1 · 登陸（純淨全景 ＋ 可收合長卷） ================= */
+#s1-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+/* The panorama is painted by the same shader as the prologue, so this
+   layer carries only the single light that invites you in. */
+#s1 {
+  position: fixed; inset: 0; z-index: 1;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity 1.0s ease, visibility 0s linear 1s;
+  touch-action: pan-y; user-select: none; -webkit-user-select: none;
+}
+#s1.is-in {
+  opacity: 1; visibility: visible; pointer-events: auto;
+  transition: opacity 1.0s ease, visibility 0s;
+}
+
+/* ---------------- the folded scroll ---------------- */
+/* A paper tag lying at the edge of the painting, not a button sitting
+   on top of it. The radius is four different corner pairs, which is
+   what stops it reading as a rounded rectangle. */
+#scroll-btn {
+  position: fixed; z-index: 6; left: 50%;
+  bottom: max(24px, calc(env(safe-area-inset-bottom) + 18px));
+  transform: translate(-50%, 14px);
+  padding: 0; border: 0; background: none; cursor: pointer;
+  opacity: 0; visibility: hidden;
+  transition: opacity .6s ease, transform .6s var(--ease-out), visibility 0s linear .6s;
+  -webkit-tap-highlight-color: transparent;
+}
+#scroll-btn.is-in {
+  opacity: 1; visibility: visible; transform: translate(-50%, 0);
+  transition: opacity .6s ease, transform .6s var(--ease-out), visibility 0s;
+}
+/* The under leaf: a second sheet, torn a little wider and set off
+   true, which is where the thickness comes from. */
+#scroll-btn::before {
+  content: ''; position: absolute; inset: -4px -8px -7px -7px;
+  /* Eight different radii. The usual 255px/15px trick collapses on a
+     box this small, because the browser scales every radius down to
+     fit the shortest side and the asymmetry goes with it. */
+  border-radius: 11px 38px 9px 34px / 32px 10px 40px 11px;
+  background: linear-gradient(170deg, #F0E6CF 0%, #E2D5B6 100%);
+  rotate: -1.4deg;
+  filter: url(#deckle) drop-shadow(0 8px 16px rgba(22, 14, 5, .5))
+                       drop-shadow(0 2px 4px rgba(22, 14, 5, .34));
+}
+
+#scroll-btn .paper {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 11px;
+  padding: 10px 11px 10px 16px;
+  /* scale, rotate and translate are separate properties here, so the
+     breathing and the hover tilt compose instead of overwriting. */
+  scale: 1; rotate: 0deg; translate: 0 0;
+  animation: gentleBreathe 4.6s ease-in-out infinite;
+  transition: rotate .4s var(--ease), translate .4s var(--ease);
+}
+/* The sheet itself. Separated from .paper so the deckle filter chews
+   the paper's outline and leaves the writing alone. */
+#scroll-btn .paper::before {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  border-radius: 40px 9px 34px 11px / 11px 32px 9px 38px;
+  background:
+    /* two soft washes, the way a wet brush leaves a sheet uneven */
+    radial-gradient(72% 130% at 86% 112%, rgba(186, 158, 104, .20), rgba(0, 0, 0, 0) 62%),
+    radial-gradient(62% 120% at  8% -14%, rgba(255, 255, 255, .92), rgba(0, 0, 0, 0) 64%),
+    linear-gradient(172deg, #FCF9F1 0%, #F7F3E8 52%, #EEE4CD 100%);
+  box-shadow: inset  0 1px 0 rgba(255, 255, 255, .95),
+              inset  0 -1px 0 rgba(146, 120, 74, .24),
+              inset  3px 0 7px -5px rgba(134, 108, 62, .6),
+              inset -3px 0 7px -5px rgba(134, 108, 62, .6);
+  filter: url(#deckle);
+}
+
+@keyframes gentleBreathe {
+  0%, 100% { scale: 1; }
+  50%      { scale: 1.018; }
+}
+#scroll-btn:hover .paper,
+#scroll-btn:focus-visible .paper { rotate: 2deg; translate: 0 -5px; }
+#scroll-btn:active .paper { rotate: 1deg; translate: 0 -1px; }
+#scroll-btn:focus-visible { outline: none; }
+#scroll-btn:focus-visible .paper::before { box-shadow: 0 0 0 2px #F5D77F; }
+
+#scroll-btn .lines {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+}
+#scroll-btn .label {
+  /* A brush face where the system has one, so the words look written
+     rather than set. */
+  font-family: 'Huninn', 'Kaiti TC', 'BiauKai', 'DFKai-SB', '標楷體',
+               'Songti TC', 'Georgia', serif;
+  font-size: 15.5px; line-height: 1.1; letter-spacing: .07em; color: #4B3718;
+  white-space: nowrap;
+}
+html[lang^="en"] #scroll-btn .label { font-size: 14.5px; letter-spacing: .04em; }
+#scroll-btn .sub {
+  font-family: 'Lato', sans-serif; font-weight: 400;
+  font-size: 8.5px; letter-spacing: .24em; line-height: 1;
+  color: #7E6436; white-space: nowrap;
+}
+
+/* Wax is poured, so it is never quite round. */
+#scroll-btn .seal {
+  display: grid; place-items: center;
+  width: 29px; height: 29px; flex: 0 0 auto;
+  border-radius: 49% 51% 53% 47% / 52% 48% 51% 49%;
+  /* Wax that has already cooled: matte, no highlight, no rim. The only
+     relief is the soft shadow where the edge settled into the paper. */
+  background: radial-gradient(circle at 42% 38%, #A94A33 0%, #9A3B26 58%, #822B1B 100%);
+  box-shadow: 0 1px 3px rgba(58, 18, 8, .32);
+  font-family: 'Lato', sans-serif; font-weight: 700;
+  font-size: 11px; letter-spacing: .01em; color: #FBE7D8;
+  rotate: -6deg;
+}
+
+/* A nudge when a new station has just become available. */
+#scroll-btn.nudge .paper {
+  animation: gentleBreathe 4.6s ease-in-out infinite, btnNudge 1.5s ease-in-out 2;
+}
+@keyframes btnNudge {
+  0%, 100% { translate: 0 0;     rotate: 0deg; }
+  30%      { translate: 0 -7px;  rotate: 2.4deg; }
+  62%      { translate: 0 -2px;  rotate: -1deg; }
+}
+
+/* ---------------- the unrolled scroll ---------------- */
+#scroll-wrap {
+  position: fixed; inset: 0; z-index: 18;
+  display: grid; place-items: stretch;
+  /* The gap above the paper is where the close mark lives, so both
+     are driven off one value and can never drift onto each other. */
+  --gap-top: calc(var(--nav-h) + env(safe-area-inset-top) + 58px);
+  padding: var(--gap-top) 0 92px;
+  background: rgba(10, 7, 4, 0.72);
+  -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
+  opacity: 0; visibility: hidden;
+  transition: opacity .45s ease, visibility 0s linear .45s;
+}
+#scroll-wrap.is-in { opacity: 1; visibility: visible; transition: opacity .45s ease, visibility 0s; }
+
+#scroll-pane {
+  /* A definite height, so the paper's own `height: 100%` has something
+     to resolve against instead of collapsing to its intrinsic size. */
+  width: 100%; height: 100%;
+  display: flex; align-items: center;
+  overflow-x: auto; overflow-y: hidden;
+  overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch;
+  white-space: nowrap; cursor: grab;
+  scrollbar-width: thin; scrollbar-color: rgba(212,175,55,.5) transparent;
+  transform: scale(.94) translateY(12px); opacity: 0;
+  transition: transform .5s cubic-bezier(.2,1.1,.3,1), opacity .4s ease;
+}
+#scroll-wrap.is-in #scroll-pane { transform: none; opacity: 1; }
+#scroll-pane.dragging { cursor: grabbing; }
+#scroll-pane::-webkit-scrollbar { height: 8px; }
+#scroll-pane::-webkit-scrollbar-track { background: transparent; }
+#scroll-pane::-webkit-scrollbar-thumb { background: rgba(212,175,55,.45); border-radius: 99px; }
+
+#scroll-track {
+  position: relative; flex: 0 0 auto;
+  height: 100%; white-space: normal; padding: 0 3vw;
+}
+/* The paper already has its own torn edge; the shadow is cast off that
+   silhouette rather than off a rectangle, which is what makes it read
+   as a sheet rather than a panel. */
+#scroll-map {
+  display: block; height: 100%; width: auto;
+  user-select: none; -webkit-user-drag: none;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, .55))
+          drop-shadow(0 2px 3px rgba(0, 0, 0, .4));
+}
+@media (max-width: 760px) {
+  #scroll-track { display: flex; align-items: center; height: auto; min-height: 100%; }
+  #scroll-map { height: auto; width: calc(100vw * 5.1); max-height: 100%; }
+}
+
+/* Two pen strokes, no box. It sits quietly until you go looking for
+   it, which is the point: the paper is what you came to read. */
+#scroll-close {
+  position: fixed; z-index: 19;
+  top: calc(var(--nav-h) + env(safe-area-inset-top) + 6px);
+  right: clamp(12px, 3vw, 30px);
+  width: 46px; height: 46px; padding: 0;
+  display: grid; place-items: center;
+  border: 0; background: none; cursor: pointer;
+  rotate: -3deg;
+  opacity: 0; visibility: hidden;
+  transition: opacity .35s ease, visibility 0s linear .35s, rotate .35s var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+#scroll-wrap.is-in ~ #scroll-close {
+  opacity: .62; visibility: visible;
+  transition: opacity .45s ease .3s, visibility 0s, rotate .35s var(--ease);
+}
+#scroll-close svg {
+  width: 30px; height: 30px; overflow: visible;
+  fill: none; stroke: #C2A06A; stroke-width: 2.1; stroke-linecap: round;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .55));
+  transition: stroke .35s ease;
+}
+#scroll-wrap.is-in ~ #scroll-close:hover,
+#scroll-wrap.is-in ~ #scroll-close:focus-visible { opacity: 1; rotate: -1deg; }
+#scroll-close:hover svg, #scroll-close:focus-visible svg { stroke: #E9D09C; }
+#scroll-close:focus-visible { outline: 2px solid #E9D09C; outline-offset: 2px; border-radius: 10px; }
+
+/* Everything that belongs to the panorama steps out while the paper is
+   unrolled, so nothing shows through the scrim as a dim ghost. */
+body.scroll-open #scroll-btn,
+body.scroll-open #next-ch { opacity: 0; visibility: hidden; }
+
+/* ---------------- stations on the scroll ---------------- */
+@keyframes stnBreathe {
+  0%, 100% { transform: scale(0.90); opacity: .88; }
+  50%      { transform: scale(1.15); opacity: 1; }
+}
+@keyframes stnRipple {
+  0%   { transform: scale(0.9); opacity: .8; }
+  100% { transform: scale(2.7); opacity: 0; }
+}
+
+#trail { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+#trail path {
+  fill: none; stroke: #C8841C; stroke-width: 2.4; stroke-linecap: round;
+  stroke-dasharray: 2 13;
+  filter: drop-shadow(0 0 4px rgba(255, 228, 160, .9));
+  opacity: 0;
+}
+#trail path.draw {
+  opacity: 1;
+  animation: trailIn .95s ease-out forwards, trailRun 1.5s linear .95s infinite;
+}
+@keyframes trailIn  { from { stroke-dashoffset: 260; } to { stroke-dashoffset: 0; } }
+@keyframes trailRun { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -15; } }
+
+.stn {
+  position: absolute; width: 44px; height: 44px; padding: 0;
+  transform: translate(-50%, -50%);
+  border: 0; background: transparent; cursor: default;
+  display: grid; place-items: center;
+  opacity: .34; filter: grayscale(.7);
+  transition: opacity .6s ease, filter .6s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.stn .ring {
+  position: absolute; width: 30px; height: 30px; border-radius: 50%;
+  border: 2px solid #8A4E08;
+  background: radial-gradient(circle at 42% 36%,
+    #FFF3D2 0%, #FFE09A 38%, #F0B84E 68%, #D68C24 100%);
+  box-shadow: 0 1px 4px rgba(58, 34, 6, .4);
+}
+.stn .star { position: relative; font-size: 12px; line-height: 1; color: #6B3E07; }
+.stn.live {
+  opacity: 1; filter: none; cursor: pointer;
+}
+.stn.live .ring {
+  box-shadow: 0 0 0 1px rgba(255, 248, 228, .7),
+              0 2px 6px rgba(58, 34, 6, .45),
+              0 0 16px 5px rgba(232, 170, 60, .6);
+  animation: stnBreathe 3.1s ease-in-out infinite;
+}
+.stn.live .star { animation: stnBreathe 3.1s ease-in-out infinite; }
+.stn.live::after {
+  content: ''; position: absolute; width: 30px; height: 30px;
+  border-radius: 50%; border: 1.5px solid rgba(160, 94, 16, .7);
+  animation: stnRipple 3.1s ease-out infinite; pointer-events: none;
+}
+.stn:focus-visible { outline: 2px solid #8A4E08; outline-offset: 4px; border-radius: 50%; }
+
+/* Read. A chop mark goes down on the paper. */
+.stn.done { opacity: 1; filter: none; cursor: pointer; }
+.stn.done .ring, .stn.done .star, .stn.done::after { display: none; }
+.stn.done .stamp { display: grid; }
+.stn .stamp {
+  display: none; place-items: center;
+  width: 42px; height: 42px; border-radius: 50%;
+  border: 2px solid #A62E22; color: #A62E22;
+  background: rgba(253, 246, 236, .84);
+  box-shadow: 0 1px 4px rgba(58, 34, 6, .3);
+  font-family: 'Huninn', 'Noto Sans TC', serif;
+  font-size: 14px; line-height: 1.05; text-align: center;
+  transform: rotate(-11deg);
+}
+.stn.just .stamp { animation: stampDown .55s cubic-bezier(.2,1.5,.4,1); }
+@keyframes stampDown {
+  0%   { transform: rotate(-26deg) scale(2.1); opacity: 0; }
+  55%  { transform: rotate(-8deg)  scale(0.92); opacity: 1; }
+  100% { transform: rotate(-11deg) scale(1); opacity: 1; }
+}
+
+/* ---------------- hint ---------------- */
+#s1-hint {
+  position: fixed; z-index: 4; left: 50%;
+  bottom: max(84px, calc(env(safe-area-inset-bottom) + 78px));
+  transform: translate(-50%, 10px);
+  padding: 10px 24px; border-radius: 999px;
+  /* No backdrop blur here. It buys almost nothing on a pill this
+     small and it is the one effect that failed to composite over the
+     WebGL canvas in testing, so the plate carries its own opacity. */
+  background: rgba(18, 12, 8, 0.74);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-family: 'Huninn', 'Noto Sans TC', 'Lato', sans-serif;
+  font-size: 13.5px; letter-spacing: .05em; color: #F7F0E2;
+  white-space: nowrap; opacity: 0; pointer-events: none;
+  /* Its own compositing layer. Over a WebGL canvas this is what keeps
+     the pill from being swallowed by the canvas layer on a HiDPI
+     screen, and it makes the fade cheaper besides. */
+  will-change: opacity, transform;
+  transition: opacity .8s ease, transform .8s var(--ease-out);
+}
+#s1-hint.is-in { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------------- next chapter ---------------- */
+#next-ch {
+  position: fixed; z-index: 6;
+  right: clamp(18px, 3vw, 36px);
+  bottom: max(26px, calc(env(safe-area-inset-bottom) + 20px));
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 13px 26px; border: 0; border-radius: 999px;
+  background: linear-gradient(135deg, #F5D77F 0%, #D4AF37 100%);
+  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.45);
+  font-family: 'Huninn', 'Noto Sans TC', 'Lato', sans-serif;
+  font-weight: 700; font-size: 14px; letter-spacing: .5px; color: #1A1208;
+  cursor: pointer;
+  opacity: 0; visibility: hidden; transform: translateY(14px) scale(.94);
+  transition: opacity .6s ease, transform .6s var(--ease), visibility 0s linear .6s,
+              box-shadow .3s ease, filter .3s ease;
+}
+#next-ch.is-in {
+  opacity: 1; visibility: visible; transform: none;
+  transition: opacity .6s ease, transform .6s var(--ease), visibility 0s,
+              box-shadow .3s ease, filter .3s ease;
+}
+#next-ch:hover { box-shadow: 0 6px 26px rgba(212, 175, 55, 0.62); filter: brightness(1.05); }
+#next-ch:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .stn.live .ring, .stn.live .star, .stn.live::after,
+  #trail path, .stn.just .stamp,
+  #scroll-btn .paper, #scroll-btn.nudge .paper { animation: none !important; }
+  #trail path.draw { opacity: 1; stroke-dashoffset: 0; }
+  #s1, #s1-hint, #scroll-btn, #scroll-wrap, #scroll-pane, #next-ch, #flap-wrap {
+    transition-duration: .01ms !important;
+  }
+  #flap-wrap.is-in #flap { animation: none; transform: none; opacity: 1; }
+}
+
+@media (max-width: 560px) {
+  #scroll-btn .paper { padding: 9px 10px 9px 13px; gap: 9px; }
+  #scroll-btn .label { font-size: 14px; }
+  #scroll-btn .seal { width: 27px; height: 27px; font-size: 10.5px; }
+  #scroll-close { width: 42px; height: 42px; }
+  #scroll-close svg { width: 26px; height: 26px; }
+  #scroll-wrap { --gap-top: calc(var(--nav-h) + env(safe-area-inset-top) + 56px); padding-bottom: 76px; }
+  /* The bottom of a phone screen already carries the paper tag, so
+     the hint sits under the chapter bar instead of stacking on it. */
+  #s1-hint {
+    font-size: 12.5px; padding: 9px 16px; white-space: normal;
+    max-width: calc(100vw - 32px); text-align: center;
+    top: calc(var(--nav-h) + env(safe-area-inset-top) + 14px); bottom: auto;
+    transform: translate(-50%, -10px);
+  }
+  #s1-hint.is-in { transform: translate(-50%, 0); }
+  #next-ch { font-size: 13px; padding: 12px 18px; right: 12px; bottom: max(78px, calc(env(safe-area-inset-bottom) + 72px)); }
+  #flap-wrap { padding: calc(var(--nav-h) + 14px) 12px 14px; }
+  #flap-scroll { padding: 24px 20px 26px; }
+  #flap p.body { font-size: 15px; }
+}
+
+/* ---------------- lift-the-flap card ---------------- */
+
+#flap-wrap {
+  position: fixed; inset: 0; z-index: 24;
+  display: grid; place-items: center;
+  padding: calc(var(--nav-h) + 24px) 20px 24px;
+  background: rgba(10, 7, 4, 0.66);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  opacity: 0; visibility: hidden;
+  transition: opacity .35s ease, visibility 0s linear .35s;
+  /* The perspective lives on the backdrop so the card hinges in depth
+     rather than merely squashing. */
+  perspective: 1600px;
+}
+#flap-wrap.is-in { opacity: 1; visibility: visible; transition: opacity .35s ease, visibility 0s; }
+
+#flap {
+  position: relative;
+  width: min(680px, 100%); max-height: 100%;
+  display: flex; flex-direction: column;
+  background: #FAF7F0; border-radius: 4px;
+  /* Two stacked sheets: the card sits on a second leaf just behind it,
+     which is what gives the edge its thickness. */
+  box-shadow:
+    0 1px 0 #EFE7D6,
+    6px 7px 0 -1px #F2ECDF,
+    7px 8px 0 0 #D9CFBA,
+    0 28px 60px rgba(0, 0, 0, 0.5);
+  transform-origin: 50% 0%;
+  transform: rotateX(-92deg) translateY(-18px);
+  opacity: 0; overflow: hidden;
+}
+#flap-wrap.is-in #flap { animation: flapUnfold .78s cubic-bezier(.2,.9,.25,1.04) forwards; }
+@keyframes flapUnfold {
+  0%   { transform: rotateX(-92deg) translateY(-18px); opacity: 0; }
+  55%  { opacity: 1; }
+  72%  { transform: rotateX(7deg) translateY(0); }
+  88%  { transform: rotateX(-3deg); }
+  100% { transform: rotateX(0deg) translateY(0); opacity: 1; }
+}
+#flap::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(140, 118, 84, 0.22),
+              inset 0 2px 0 rgba(255, 255, 255, 0.7);
+  border-radius: 4px;
+}
+#flap-scroll { overflow-y: auto; padding: 30px clamp(24px, 4vw, 40px) 34px; }
+#flap-fig {
+  display: block; width: 100%; max-width: 430px; height: auto;
+  margin: 0 auto 22px; border-radius: 3px;
+  filter: drop-shadow(0 8px 18px rgba(90, 66, 34, 0.22));
+}
+#flap h2 {
+  margin: 0 0 4px;
+  font-family: 'Huninn', 'Noto Sans TC', 'Lato', serif;
+  font-size: clamp(20px, 2.6vw, 27px);
+  font-weight: 400; letter-spacing: .02em; color: #8C3A2B;
+}
+#flap .kicker {
+  margin: 0 0 16px;
+  font-family: 'Lato', sans-serif; font-weight: 400;
+  font-size: 11.5px; letter-spacing: .22em; text-transform: uppercase; color: #A98B5B;
+}
+#flap p.body {
+  margin: 0;
+  font-family: 'Huninn', 'Noto Sans TC', 'Lato', sans-serif;
+  font-size: 15.5px; line-height: 1.95; letter-spacing: .01em; color: #4A3A2A;
+}
+html[lang^="en"] #flap p.body { font-family: 'Lato', sans-serif; line-height: 1.75; }
+#flap .rule {
+  height: 1px; margin: 22px 0 18px; border: 0;
+  background: linear-gradient(90deg, rgba(169,139,91,.55), rgba(169,139,91,0));
+}
+#flap-audio {
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 9px 18px 9px 14px; border-radius: 999px;
+  border: 1px solid rgba(140, 58, 43, 0.3);
+  background: rgba(140, 58, 43, 0.07);
+  font-family: 'Huninn', 'Noto Sans TC', 'Lato', sans-serif;
+  font-size: 13px; letter-spacing: .04em; color: #8C3A2B; cursor: pointer;
+  transition: background-color .3s ease, border-color .3s ease;
+}
+#flap-audio:hover { background: rgba(140, 58, 43, 0.14); border-color: rgba(140, 58, 43, .5); }
+#flap-audio:focus-visible { outline: 2px solid #8C3A2B; outline-offset: 2px; }
+#flap-audio svg { width: 16px; height: 16px; }
+
+/* The close control is a chop mark, not a browser X. */
+#flap-close {
+  position: absolute; top: 14px; right: 14px; z-index: 2;
+  width: 42px; height: 42px; padding: 0; cursor: pointer;
+  border: 2px solid #9E3B2A; border-radius: 6px;
+  background: rgba(158, 59, 42, 0.07); color: #9E3B2A;
+  font-family: 'Huninn', 'Noto Sans TC', serif;
+  font-size: 17px; line-height: 1; transform: rotate(-6deg);
+  transition: background-color .3s ease, transform .3s var(--ease);
+}
+#flap-close:hover { background: rgba(158, 59, 42, 0.18); transform: rotate(-6deg) scale(1.07); }
+#flap-close:focus-visible { outline: 2px solid #9E3B2A; outline-offset: 3px; }
