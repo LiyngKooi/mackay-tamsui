@@ -1,0 +1,121 @@
+/* ======================================================================
+   淡水河邊的神奇馬偕 AR · Loading Page 樣式
+   內容已經寫進 index.html 的 <style>，index.html 可以直接雙擊打開。
+   ====================================================================== */
+
+/* ================= Loading · 寧願燒盡，不願鏽壞 ================= */
+
+#loading-screen {
+  position: fixed; inset: 0; z-index: 9999;
+  width: 100vw; height: 100vh; height: 100dvh;
+  background: #000;
+  display: grid; place-items: center;
+  padding: clamp(24px, 5vh, 56px) clamp(20px, 5vw, 72px);
+  /* The plate is opaque from the first paint, so nothing behind it
+     flashes; the 1.2s fade belongs to the contents. On the way out the
+     whole plate goes, which is the transition that matters. */
+  opacity: 1;
+  transition: opacity 1.2s ease-out, transform 1.2s ease-out;
+  will-change: opacity, transform;
+}
+#loading-screen.is-out { opacity: 0; transform: scale(1.02); pointer-events: none; }
+
+.ld-wrap {
+  display: flex; align-items: stretch; justify-content: center;
+  gap: clamp(32px, 6vw, 96px);
+  width: 100%; max-width: 1320px;
+  opacity: 0; transform: translateY(10px);
+  transition: opacity 1.2s ease, transform 1.2s cubic-bezier(.16, 1, .3, 1);
+}
+#loading-screen.is-in .ld-wrap { opacity: 1; transform: none; }
+
+.ld-fig { margin: 0; flex: 0 0 auto; align-self: center; }
+#loading-hero {
+  display: block; width: auto;
+  height: clamp(42vh, 60vh, 65vh);
+  max-width: 38vw; object-fit: contain;
+  user-select: none; -webkit-user-drag: none;
+}
+
+/* The words sit in the middle of the figure's height and the progress
+   line rides at its foot, which is how the two columns read as one
+   plate rather than two stacked blocks. */
+.ld-text {
+  flex: 0 1 auto; min-width: 0;
+  display: flex; flex-direction: column;
+}
+.ld-head { margin: auto 0; }
+
+.ld-zh {
+  margin: 0;
+  /* A Ming face if the machine has one. Nothing here is a web font:
+     the page has one embedded subset and it is spent on the title. */
+  font-family: 'Songti TC', 'Noto Serif TC', 'Source Han Serif TC',
+               'Source Han Serif TW', 'PMingLiU', 'MingLiU', 'Songti SC', serif;
+  font-weight: 400;
+  font-size: clamp(30px, 4.6vw, 62px);
+  line-height: 1.26; letter-spacing: 0.15em;
+  color: #E8E2D6;
+  /* The last character would otherwise sit a full space in from the
+     right, because letter-spacing is added after it too. */
+  margin-right: -0.15em;
+}
+.ld-en {
+  margin: clamp(10px, 1.6vh, 18px) 0 0;
+  font-family: 'Didot', 'Bodoni 72', 'Playfair Display', 'Hoefler Text',
+               Georgia, 'Times New Roman', serif;
+  font-weight: 300; font-style: normal;
+  font-size: clamp(16px, 2vw, 29px);
+  line-height: 1.4; letter-spacing: 0.08em;
+  color: #9E9689;
+  margin-right: -0.08em;
+}
+
+/* Right aligned, so its end lands under the end of the title. */
+.ld-meter { width: min(100%, 460px); margin: clamp(30px, 6vh, 64px) 0 0 auto; }
+.ld-track {
+  position: relative; width: 100%; height: 1px;
+  background: rgba(232, 226, 214, 0.17);
+}
+#ld-bar {
+  display: block; height: 1px; width: 0%;
+  background: #E8E2D6;
+  box-shadow: 0 0 6px rgba(232, 226, 214, 0.45);
+  /* The width is written every frame by the easing in script, so the
+     transition here would only fight it. */
+  transition: none;
+}
+.ld-count {
+  margin: 12px 0 0; text-align: right;
+  font-family: 'Songti TC', 'Noto Serif TC', 'PMingLiU', Georgia, serif;
+  font-size: 12px; letter-spacing: 0.1em; color: #9E9689;
+  font-variant-numeric: tabular-nums;
+}
+.ld-dots { display: inline-block; width: 1.2em; text-align: left; }
+
+@media (max-width: 768px) {
+  #loading-screen { padding: 7vh 26px 8vh; place-items: center; }
+  .ld-wrap {
+    flex-direction: column; justify-content: center;
+    gap: clamp(26px, 5vh, 46px); text-align: center;
+  }
+  #loading-hero { height: clamp(30vh, 40vh, 44vh); max-width: 72vw; }
+  .ld-text { width: 100%; display: block; }
+  .ld-head { margin: 0; }
+  .ld-zh { font-size: clamp(25px, 7.4vw, 36px); margin-right: -0.15em; }
+  .ld-en { font-size: clamp(13px, 3.5vw, 17px); margin-right: -0.08em; }
+  .ld-meter { width: 100%; margin: clamp(26px, 4.5vh, 40px) 0 0; }
+  .ld-count { text-align: center; }
+}
+
+/* Short screens: the illustration yields first, the words never wrap
+   into the progress line. */
+@media (max-width: 768px) and (max-height: 680px) {
+  #loading-hero { height: 26vh; }
+  .ld-meter { margin-top: 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #loading-screen, .ld-wrap { transition-duration: .01ms !important; }
+  #loading-screen.is-out { transform: none; }
+}
