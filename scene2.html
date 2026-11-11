@@ -1,72 +1,96 @@
-<!-- Scene 2「仁醫」的 HTML 結構。已寫進 index.html 的 <body>。 -->
-<div id="s2" aria-label="1873 滬尾偕醫館"></div>
+  <div id="s2" aria-label="1873 滬尾偕醫館"></div>
 
-<div id="s2-hint" role="status"></div>
+  <div id="s2-hint" role="status"></div>
 
-<!-- ---------------- the journal tag, bottom left ---------------- -->
-<button id="jr-btn" type="button">
-  <span class="paper">
-    <span class="lines">
-      <span class="label" id="jr-label"></span>
-      <span class="sub">MACKAY'S JOURNAL</span>
+  <!-- ---------------- the journal tag, bottom left ---------------- -->
+  <button id="jr-btn" type="button">
+    <span class="paper">
+      <span class="lines">
+        <span class="label" id="jr-label"></span>
+        <span class="sub">MACKAY'S JOURNAL</span>
+      </span>
+      <span class="seal"><span id="jr-count"></span></span>
     </span>
-    <span class="seal"><span id="jr-count"></span></span>
-  </span>
-</button>
+  </button>
 
-<!-- ---------------- next chapter, bottom right ---------------- -->
-<button id="s2-next" type="button"></button>
+  <!-- ---------------- next chapter, bottom right ---------------- -->
+  <button id="s2-next" type="button"></button>
 
-<!-- ---------------- the horizontal journal ---------------- -->
-<div id="jr-wrap" role="dialog" aria-modal="true" aria-label="滬尾行醫手札" aria-hidden="true">
-  <div id="jr-pane">
-    <div id="jr-track">
-      <img id="jr-bg" alt="" draggable="false">
+  <!-- ---------------- the horizontal journal ---------------- -->
+  <div id="jr-wrap" role="dialog" aria-modal="true" aria-label="滬尾行醫手札" aria-hidden="true">
+    <div id="jr-pane">
+      <div id="jr-track">
+        <img id="jr-bg" alt="" draggable="false">
+      </div>
     </div>
   </div>
-</div>
-<button id="jr-close" type="button">
-  <svg viewBox="0 0 34 34" aria-hidden="true" focusable="false">
-    <path d="M8.5 7.8 C14 13.4 19.8 19.6 25.8 26.4"/>
-    <path d="M26.2 8.1 C20.4 13.6 14.3 19.9 8.2 26.1"/>
-  </svg>
-</button>
+  <button id="jr-close" type="button">
+    <svg viewBox="0 0 34 34" aria-hidden="true" focusable="false">
+      <path d="M8.5 7.8 C14 13.4 19.8 19.6 25.8 26.4"/>
+      <path d="M26.2 8.1 C20.4 13.6 14.3 19.9 8.2 26.1"/>
+    </svg>
+  </button>
 
-<!-- ---------------- the archive card ---------------- -->
-<div id="arc-wrap" role="dialog" aria-modal="true" aria-labelledby="arc-title" aria-hidden="true">
-  <article id="arc">
-    <button id="arc-close" type="button">
-      <svg viewBox="0 0 34 34" aria-hidden="true" focusable="false">
-        <path d="M8.5 7.8 C14 13.4 19.8 19.6 25.8 26.4"/>
-        <path d="M26.2 8.1 C20.4 13.6 14.3 19.9 8.2 26.1"/>
-      </svg>
-    </button>
-    <div class="arc-scroll">
-      <p class="kicker" id="arc-kicker"></p>
-      <h2 id="arc-title"></h2>
-      <p class="body" id="arc-body"></p>
+  <!-- ---------------- the archive card ---------------- -->
+  <div id="arc-wrap" role="dialog" aria-modal="true" aria-labelledby="arc-title" aria-hidden="true">
+    <article id="arc">
+      <!-- The same classical box as the lift up card in chapter one. -->
+      <button id="arc-close" type="button" aria-label="關閉"><span aria-hidden="true">閉</span></button>
+      <div class="arc-scroll">
+        <!-- The exhibit plate, hairline framed, the way chapter one opens
+             its cards. -->
+        <figure id="arc-figwrap"><img id="arc-fig" alt=""></figure>
+        <p class="kicker" id="arc-kicker"></p>
+        <h2 id="arc-title"></h2>
+        <hr class="rule">
+        <p class="body" id="arc-body"></p>
 
-      <!-- plates, used by the forceps entry -->
-      <div id="arc-plates">
-        <figure class="plate"><img id="arc-fig-a" alt=""><figcaption id="arc-cap-a"></figcaption></figure>
-        <figure class="plate"><img id="arc-fig-b" alt=""><figcaption id="arc-cap-b"></figcaption></figure>
+        <div id="arc-stage" hidden></div>
+
+        <!-- plates, used by the forceps entry -->
+        <div id="arc-plates">
+          <figure class="plate"><img id="arc-fig-a" alt=""><figcaption id="arc-cap-a"></figcaption></figure>
+          <figure class="plate"><img id="arc-fig-b" alt=""><figcaption id="arc-cap-b"></figcaption></figure>
+        </div>
+
+        <!-- the hundred year door, used by the clinic entry -->
+        <div id="time-portal-container" role="button" tabindex="0" aria-pressed="false">
+          <!-- what stands there now -->
+          <div class="portal-reveal-layer"><img id="portal-now" alt="" draggable="false"></div>
+
+          <!-- the 1873 facade, painted across two hinged leaves -->
+          <div class="portal-doors-wrapper">
+            <div class="door-panel left-door"><img id="portal-then-l" alt="" draggable="false"></div>
+            <div class="door-panel right-door"><img id="portal-then-r" alt="" draggable="false"></div>
+          </div>
+
+          <span class="door-seam-glow" aria-hidden="true"></span>
+          <span class="portal-hint" id="portal-hint"></span>
+        </div>
+        <figure id="portal-plate">
+          <h3 id="portal-plate-t"></h3>
+          <p id="portal-plate-b"></p>
+        </figure>
+
+        <hr class="rule">
+        <p class="body" id="arc-tail"></p>
       </div>
-
-      <!-- then and now, used by the clinic entry -->
-      <div id="tn-stage">
-        <img class="tn-img" id="tn-then" alt="">
-        <div id="tn-clip"><img class="tn-img" id="tn-now" alt=""></div>
-        <div id="tn-line"><span class="grip" aria-hidden="true"></span></div>
-        <span class="tn-tag left"  id="tn-tag-then"></span>
-        <span class="tn-tag right" id="tn-tag-now"></span>
-        <input id="tn-range" type="range" min="0" max="100" value="50" step="0.1">
+      <div class="arc-foot">
+        <button id="arc-ar" type="button"><span id="arc-ar-label"></span></button>
       </div>
+    </article>
+  </div>
 
-      <p class="body" id="arc-tail"></p>
-      <p class="note" id="arc-note"></p>
+  <!-- ---------------- the rice paper card that carries the code ----------------
+       A desktop screen cannot open a camera pass through, so the address
+       is handed to a phone instead. -->
+  <div id="qr-wrap" role="dialog" aria-modal="true" aria-labelledby="qr-title" aria-hidden="true">
+    <div id="qr-card">
+      <button id="qr-close" type="button" aria-label="關閉"><span aria-hidden="true">閉</span></button>
+      <p class="kicker" id="qr-kicker"></p>
+      <h3 id="qr-title"></h3>
+      <div id="qr-plate"><canvas id="qr-canvas" aria-hidden="true"></canvas></div>
+      <p id="qr-note"></p>
+      <p id="qr-url"></p>
     </div>
-    <div class="arc-foot">
-      <button id="arc-ar" type="button"><span id="arc-ar-label"></span></button>
-    </div>
-  </article>
-</div>
+  </div>

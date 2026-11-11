@@ -1,0 +1,160 @@
+    /* ---------------- the hundred year door ----------------
+       A pop up book mechanism. The 1873 clinic is painted across two
+       leaves that are hinged at the outer edges; pushing them open turns
+       them away from the reader and the hospital that stands there now is
+       behind. Everything is cream: at no point in the swing does a black
+       plate show through. */
+    #time-portal-container {
+      position: relative; width: 100%; aspect-ratio: 16 / 10;
+      margin: 0 0 22px; border-radius: 10px;
+      background: #FCFBF7; overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(107, 83, 52, .28),
+                  0 10px 26px rgba(90, 66, 34, .18);
+      cursor: pointer; user-select: none; -webkit-user-select: none;
+      touch-action: pan-y; -webkit-tap-highlight-color: transparent;
+    }
+    #time-portal-container:focus-visible { outline: 2px solid #C79B45; outline-offset: 3px; }
+
+    /* ---- what is behind the doors ---- */
+    .portal-reveal-layer {
+      position: absolute; inset: 0; overflow: hidden;
+      background: #FCFBF7;
+      /* The frame itself takes every press and drag. Left alone, a
+         photograph underneath starts a native image drag on the first
+         move and the browser stops sending the rest of the gesture. */
+      pointer-events: none;
+    }
+    .portal-reveal-layer img {
+      display: block; width: 100%; height: 100%; object-fit: cover;
+      -webkit-user-drag: none; user-drag: none; pointer-events: none;
+      transform: scale(1);
+      transition: transform 1.6s cubic-bezier(.25, 1, .5, 1);
+    }
+    #time-portal-container.is-open .portal-reveal-layer img { transform: scale(1.03); }
+
+    /* ---- the two leaves ---- */
+    .portal-doors-wrapper {
+      position: absolute; inset: 0;
+      perspective: 1200px; perspective-origin: 50% 50%;
+      pointer-events: none;
+    }
+    .door-panel {
+      position: absolute; top: 0; bottom: 0; width: 50%;
+      overflow: hidden; backface-visibility: hidden;
+      transition: transform 1.2s cubic-bezier(.25, 1, .5, 1),
+                  box-shadow 1.2s cubic-bezier(.25, 1, .5, 1),
+                  filter 1.2s cubic-bezier(.25, 1, .5, 1);
+    }
+    .door-panel.left-door  { left: 0;  transform-origin: left center;  }
+    .door-panel.right-door { right: 0; transform-origin: right center; }
+
+    /* Each leaf is a window onto its own half of one photograph, so the
+       two of them read as a single facade until they part. The image is
+       laid out at twice the leaf width, which is the container width, and
+       the right leaf is shifted back by exactly that half. */
+    .door-panel img {
+      position: absolute; top: 0; left: 0;
+      width: 200%; height: 100%; object-fit: cover;
+      -webkit-user-drag: none; pointer-events: none;
+    }
+    .door-panel.right-door img { left: -100%; }
+
+    /* The thickness of the leaf: a dark inner edge at the hinge side, a
+       lit one at the opening side, and a sliver of end grain standing
+       proud of the seam. */
+    .door-panel::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      transition: opacity 1.2s cubic-bezier(.25, 1, .5, 1);
+    }
+    .left-door::after {
+      background: linear-gradient(90deg,
+        rgba(38, 24, 8, .34) 0%, rgba(38, 24, 8, 0) 14%,
+        rgba(255, 240, 205, 0) 86%, rgba(255, 240, 205, .3) 100%);
+    }
+    .right-door::after {
+      background: linear-gradient(270deg,
+        rgba(38, 24, 8, .34) 0%, rgba(38, 24, 8, 0) 14%,
+        rgba(255, 240, 205, 0) 86%, rgba(255, 240, 205, .3) 100%);
+    }
+    .left-door  { box-shadow: inset -3px 0 6px -2px rgba(28, 18, 4, .5); }
+    .right-door { box-shadow: inset  3px 0 6px -2px rgba(28, 18, 4, .5); }
+
+    #time-portal-container.is-open .left-door  { transform: rotateY(-85deg); }
+    #time-portal-container.is-open .right-door { transform: rotateY( 85deg); }
+    /* Turned almost edge on, a real leaf loses its light. */
+    #time-portal-container.is-open .door-panel {
+      filter: brightness(.82);
+      box-shadow: 0 0 22px rgba(28, 18, 4, .4);
+    }
+
+    /* ---- the line of light between them ---- */
+    .door-seam-glow {
+      position: absolute; top: 0; bottom: 0; left: 50%;
+      width: 26px; margin-left: -13px; pointer-events: none; z-index: 3;
+      background: linear-gradient(90deg,
+        rgba(255, 215, 0, 0) 0%,
+        rgba(255, 215, 0, .4) 38%,
+        rgba(255, 246, 214, .78) 50%,
+        rgba(255, 215, 0, .4) 62%,
+        rgba(255, 215, 0, 0) 100%);
+      mix-blend-mode: screen;
+      animation: seamBreathe 3.2s ease-in-out infinite;
+      transition: opacity .5s ease;
+    }
+    @keyframes seamBreathe {
+      0%, 100% { opacity: .55; transform: scaleX(.78); }
+      50%      { opacity: 1;   transform: scaleX(1.18); }
+    }
+    #time-portal-container.is-open .door-seam-glow { opacity: 0; animation: none; }
+
+    /* ---- the little paper tag under the seam ---- */
+    .portal-hint {
+      position: absolute; left: 50%; bottom: 16px; z-index: 4;
+      transform: translateX(-50%) rotate(-1.4deg);
+      padding: 7px 15px 8px; pointer-events: none; white-space: nowrap;
+      background: linear-gradient(172deg, #FDFBF2 0%, #F5F0E0 60%, #ECE3CC 100%);
+      border-radius: 22px 6px 20px 7px / 7px 18px 6px 21px;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, .9) inset,
+                  0 -1px 0 rgba(146, 120, 74, .22) inset,
+                  0 4px 10px rgba(32, 20, 6, .34);
+      font-family: 'Huninn', 'Kaiti TC', 'BiauKai', 'Noto Sans TC', serif;
+      font-size: 12.5px; letter-spacing: .1em; color: #6B4A18;
+      transition: opacity .45s ease, transform .45s var(--ease);
+    }
+    html[lang^="en"] .portal-hint {
+      font-family: 'Lato', sans-serif; font-size: 12px; letter-spacing: .04em;
+    }
+    #time-portal-container.is-open .portal-hint {
+      opacity: 0; transform: translateX(-50%) translateY(8px) rotate(-1.4deg);
+    }
+
+    /* ---- the inscription, which arrives once the doors have settled ---- */
+    #portal-plate {
+      margin: 0 0 28px; padding: 20px 24px 22px;
+      border-left: 2px solid rgba(201, 155, 69, .55);
+      background: linear-gradient(100deg, rgba(247, 241, 226, .85), rgba(247, 241, 226, 0) 72%);
+      opacity: 0; transform: translateY(10px);
+      transition: opacity .7s ease, transform .7s cubic-bezier(.25, 1, .5, 1);
+    }
+    #portal-plate.is-in { opacity: 1; transform: translateY(0); }
+    #portal-plate h3 {
+      margin: 0 0 10px; font-weight: 400;
+      font-family: 'Songti TC', 'Noto Serif TC', 'PMingLiU', 'Huninn', serif;
+      font-size: clamp(15px, 1.9vw, 18px); letter-spacing: .09em; line-height: 1.6;
+      color: #6B3E07;
+    }
+    html[lang^="en"] #portal-plate h3 {
+      font-family: 'Didot', 'Hoefler Text', Georgia, serif; letter-spacing: .03em;
+    }
+    #portal-plate p {
+      margin: 0;
+      font-family: 'Huninn', 'Noto Sans TC', 'Lato', sans-serif;
+      font-size: 14px; line-height: 1.95; letter-spacing: .02em; color: #4A3A2A;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .door-panel, .portal-reveal-layer img, #portal-plate, .portal-hint {
+        transition-duration: .01ms !important;
+      }
+      .door-seam-glow { animation: none; opacity: .7; }
+    }
