@@ -1315,6 +1315,25 @@
       --progress-bar-color: #C79B45;
       --progress-mask: transparent;
     }
+    /* Laid over the plate when the model file is not on the server, so
+       the reader is told why the paper is empty rather than left to
+       guess. It covers the model-viewer, and with it the AR button that
+       would otherwise open the camera on nothing. */
+    #arc-stage .stage-note {
+      position: absolute; inset: 0; z-index: 2;
+      display: flex; flex-direction: column; justify-content: center;
+      gap: 10px; margin: 0; padding: 22px 26px;
+      background: linear-gradient(176deg, #FFFDF6 0%, #F7F1E2 62%, #F0E9D6 100%);
+      font-family: 'Huninn', 'Noto Sans TC', sans-serif;
+      font-size: 15px; line-height: 1.75;
+      color: #6B5334; text-align: center;
+    }
+    #arc-stage .stage-note code {
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 14px; color: #8A3A22;
+      word-break: break-all;
+    }
+    #arc-stage .stage-note .how { font-size: 13.5px; opacity: .78; }
 
     #arc-plates { display: grid; gap: 26px; margin-bottom: 28px; }
     #arc-plates[hidden], #time-portal-container[hidden], #portal-plate[hidden] { display: none; }
@@ -2982,6 +3001,8 @@
         ar: '在現實中檢視 (AR)',
         arOff: 'AR 需要把這個網頁放到網路上才能啟動，例如 GitHub Pages，並把 s2 資料夾一起上傳。現在是從電腦本機開啟的，所以還沒有可以掃描的網址。',
         arNoDevice: '這台裝置的瀏覽器沒有提供 AR。用 Android 的 Chrome 或 iPhone 的 Safari 開啟同一個網址就可以。',
+        arMissing: '伺服器上找不到這個 3D 模型檔：',
+        arMissingHow: '請把 s2 資料夾（內含三個 .glb 與三個 .usdz）上傳到與 index.html 同一層。',
         locked: '先讀完前一站，這張才會翻開',
         portalHint: '輕按推開木門',
         portalTitle: '1873 年滬尾偕醫館 至 今日馬偕紀念醫院',
@@ -3020,6 +3041,8 @@
         ar: 'View it in your room (AR)',
         arOff: 'AR needs this page to be on the web, for example on GitHub Pages with the s2 folder uploaded alongside it. This copy is open from a local file, so there is no address to scan yet.',
         arNoDevice: 'This browser does not offer AR. Open the same address in Chrome on Android or Safari on iPhone.',
+        arMissing: 'The server has no 3D file at this address:',
+        arMissingHow: 'Upload the s2 folder, with its three .glb and three .usdz files, next to index.html.',
         locked: 'Read the station before this one to turn this sheet',
         portalHint: 'Push the doors open',
         portalTitle: 'From the Hobe Mackay Clinic of 1873 to Mackay Memorial Hospital today',
@@ -3803,6 +3826,30 @@
       '<defs><radialGradient id="p" cx="50%" cy="46%" r="62%">' +
       '<stop offset="0" stop-color="#FFFDF6"/><stop offset="1" stop-color="#F0E9D6"/>' +
       '</radialGradient></defs><rect width="800" height="600" fill="url(#p)"/></svg>');
+    /* Written over the plate, keeping the model-viewer element underneath
+       so a later retry does not have to build it again. */
+    function showStageError(o) {
+      const t = T[lang];
+      let note = arcStage.querySelector('.stage-note');
+      if (!note) {
+        note = document.createElement('p');
+        note.className = 'stage-note';
+        arcStage.appendChild(note);
+      }
+      note.textContent = '';
+      const line = document.createElement('span');
+      line.textContent = t.arMissing;
+      const path = document.createElement('code');
+      path.textContent = o.file;
+      const how = document.createElement('span');
+      how.className = 'how';
+      how.textContent = t.arMissingHow;
+      note.appendChild(line);
+      note.appendChild(path);
+      note.appendChild(how);
+      arcStage.hidden = false;
+    }
+
     async function summon(id) {
       const o = OBJ.find(v => v.id === id);
       if (!o || !hosted) { openQR(id, 'host'); return; }
@@ -3839,6 +3886,19 @@
         mv.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
         mv.setAttribute('loading', 'eager');
         mv.setAttribute('reveal', 'auto');
+        /* The models are the one part of this page that is not carried
+           inside it, because a phone's AR viewer will only take a real
+           address and not an embedded copy. So they can be missing from
+           the server while everything else works, and what that looks
+           like is an empty plate with an AR button on it. Say so on the
+           plate instead, with the address that came back empty. */
+        mv.addEventListener('error', e => {
+          if (mv.dataset.id !== openId) return;
+          const d = (e && e.detail) || {};
+          if (d.type && d.type !== 'loadfailure') return;
+          mv.failed = true;
+          showStageError(o);
+        }, false);
         arcStage.appendChild(mv);
       }
       /* The stage has to be on screen before the model will fetch itself:
@@ -3846,6 +3906,8 @@
          never loads at all. It also means the object appears in the card
          the moment it is asked for, which is the right thing to see
          whether or not the camera opens afterwards. */
+      const stale = arcStage.querySelector('.stage-note');
+      if (stale) stale.remove();
       arcStage.hidden = false;
       arcStage.scrollIntoView({ block: 'nearest', behavior: reduce ? 'auto' : 'smooth' });
       await customElements.whenDefined('model-viewer');
@@ -3856,6 +3918,10 @@
         ]);
       }
       if (openId !== id) return;
+      /* A model that never arrived cannot be put in a room, and the AR
+         viewer would open on nothing at all, so stop here and leave the
+         note on the plate. */
+      if (mv.failed || !mv.loaded) { showStageError(o); return; }
       if (mv.canActivateAR) { mv.activateAR(); return; }
       /* No camera to put it in. The card says why rather than a bar across
          the middle of the page. */
