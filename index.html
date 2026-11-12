@@ -1532,6 +1532,17 @@
     #arc-ar:focus-visible { outline: 2px solid #8C3A2B; outline-offset: 3px; }
     #arc-ar.is-off { opacity: .5; cursor: default; }
     #arc-ar.is-off:hover { transform: none; background: transparent; }
+    /* The one case where the first press only fetched the model: the
+       button says so and asks for a second, and glows while it waits. */
+    #arc-ar.is-ready {
+      border-color: rgba(201, 155, 69, .85);
+      background: rgba(201, 155, 69, .12);
+      animation: arReady 1.8s ease-in-out infinite;
+    }
+    @keyframes arReady {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(201, 155, 69, .36); }
+      50%      { box-shadow: 0 0 0 7px rgba(201, 155, 69, 0); }
+    }
 
     /* ---------------- the rice paper card with the code ----------------
        A desk screen has no camera to put the object into, so what it hands
@@ -3001,6 +3012,7 @@
         ar: '在現實中檢視 (AR)',
         arOff: 'AR 需要把這個網頁放到網路上才能啟動，例如 GitHub Pages，並把 s2 資料夾一起上傳。現在是從電腦本機開啟的，所以還沒有可以掃描的網址。',
         arNoDevice: '這台裝置的瀏覽器沒有提供 AR。用 Android 的 Chrome 或 iPhone 的 Safari 開啟同一個網址就可以。',
+        arAgain: '模型已就緒，再按一次開啟相機',
         arMissing: '伺服器上找不到這個 3D 模型檔：',
         arMissingHow: '請把 s2 資料夾（內含三個 .glb 與三個 .usdz）上傳到與 index.html 同一層。',
         locked: '先讀完前一站，這張才會翻開',
@@ -3041,6 +3053,7 @@
         ar: 'View it in your room (AR)',
         arOff: 'AR needs this page to be on the web, for example on GitHub Pages with the s2 folder uploaded alongside it. This copy is open from a local file, so there is no address to scan yet.',
         arNoDevice: 'This browser does not offer AR. Open the same address in Chrome on Android or Safari on iPhone.',
+        arAgain: 'Model ready. Press once more to open the camera.',
         arMissing: 'The server has no 3D file at this address:',
         arMissingHow: 'Upload the s2 folder, with its three .glb and three .usdz files, next to index.html.',
         locked: 'Read the station before this one to turn this sheet',
@@ -3615,11 +3628,17 @@
       q('#arc-fig').alt = c.t;
       q('#arc-figwrap').hidden = !o;
 
+      /* On a phone the object is built and fetched as soon as the card
+         opens, not when the AR button is pressed. Handing the page over
+         to the camera only works while the press is still live, and
+         waiting for a model to arrive outlasts that, so the model has to
+         be standing ready before the finger lands. */
       arcStage.hidden = true;
+      if (PHONE && hosted && o) prepare(id);
       q('#arc-ar-label').textContent = t.ar;
       /* The button always works now: on a desk it hands over the address,
          on a phone it opens the camera. No warning bar either way. */
-      arcAr.classList.remove('is-off');
+      arcAr.classList.remove('is-off', 'is-ready');
 
       q('#arc .arc-scroll').scrollTop = 0;
       arcWrap.classList.add('is-in');
@@ -3850,12 +3869,14 @@
       arcStage.hidden = false;
     }
 
-    async function summon(id) {
+    /* Builds the object into the card and starts it loading. Nothing here
+       touches the camera: by the time the reader presses the button the
+       model should already be standing on the plate. */
+    async function prepare(id) {
       const o = OBJ.find(v => v.id === id);
-      if (!o || !hosted) { openQR(id, 'host'); return; }
+      if (!o || !hosted) return null;
       const ok = await loadMV();
-      if (!ok) { openQR(id, 'nodevice'); return; }
-      if (openId !== id) return;
+      if (!ok || openId !== id) return null;
 
       let mv = arcStage.querySelector('model-viewer');
       if (!mv || mv.dataset.id !== id) {
@@ -3883,7 +3904,11 @@
         mv.setAttribute('shadow-intensity', '0.6');
         mv.setAttribute('touch-action', 'pan-y');
         mv.setAttribute('ar', '');
-        mv.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
+        /* Scene Viewer first on Android. It is the one that is always
+           there, while WebXR wants Google's AR services installed and
+           turns the button off on a phone that has not got them. Quick
+           Look is the only one iOS offers and takes the USDZ above. */
+        mv.setAttribute('ar-modes', 'scene-viewer webxr quick-look');
         mv.setAttribute('loading', 'eager');
         mv.setAttribute('reveal', 'auto');
         /* The models are the one part of this page that is not carried
@@ -3903,29 +3928,48 @@
       }
       /* The stage has to be on screen before the model will fetch itself:
          model-viewer waits for the element to be visible, and a hidden one
-         never loads at all. It also means the object appears in the card
-         the moment it is asked for, which is the right thing to see
-         whether or not the camera opens afterwards. */
+         never loads at all. */
       const stale = arcStage.querySelector('.stage-note');
       if (stale) stale.remove();
       arcStage.hidden = false;
-      arcStage.scrollIntoView({ block: 'nearest', behavior: reduce ? 'auto' : 'smooth' });
       await customElements.whenDefined('model-viewer');
       if (!mv.loaded) {
         await Promise.race([
           new Promise(r => mv.addEventListener('load', r, { once: true })),
-          new Promise(r => setTimeout(r, 12000)),
+          new Promise(r => setTimeout(r, 20000)),
         ]);
       }
-      if (openId !== id) return;
-      /* A model that never arrived cannot be put in a room, and the AR
-         viewer would open on nothing at all, so stop here and leave the
-         note on the plate. */
-      if (mv.failed || !mv.loaded) { showStageError(o); return; }
-      if (mv.canActivateAR) { mv.activateAR(); return; }
-      /* No camera to put it in. The card says why rather than a bar across
-         the middle of the page. */
-      openQR(id, 'nodevice');
+      if (openId !== id) return null;
+      if (mv.failed || !mv.loaded) { showStageError(o); return null; }
+      return mv;
+    }
+
+    /* The press itself. Everything it needs is already in hand, so the
+       camera opens on the same tick the finger lands and the browser
+       still counts it as the reader's own doing. */
+    function summon(id) {
+      const o = OBJ.find(v => v.id === id);
+      if (!o || !hosted) { openQR(id, 'host'); return; }
+
+      const mv = arcStage.querySelector('model-viewer');
+      if (mv && mv.dataset.id === id && mv.loaded && mv.canActivateAR) {
+        mv.activateAR();
+        return;
+      }
+      if (mv && mv.failed) { showStageError(o); return; }
+
+      /* Not ready yet, which on a slow connection is the first press.
+         Bring the object up and ask for one more press rather than
+         opening the camera on nothing, or on a gesture that has by then
+         expired and would be refused. */
+      prepare(id).then(ready => {
+        if (openId !== id) return;
+        if (!ready) return;
+        if (!ready.canActivateAR) { openQR(id, 'nodevice'); return; }
+        arcAr.classList.add('is-ready');
+        q('#arc-ar-label').textContent = T[lang].arAgain;
+        arcStage.scrollIntoView({ block: 'nearest', behavior: reduce ? 'auto' : 'smooth' });
+      });
     }
 
     /* ================= a small QR encoder =================
