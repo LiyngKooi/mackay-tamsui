@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>相機疊合原型</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 18px 40px;
+    background: #F7F1E2; color: #3A2E1C;
+    font-family: 'Huninn', 'Noto Sans TC', -apple-system, system-ui, sans-serif;
+    line-height: 1.75;
+  }
+  h1 { font-size: 19px; margin: 0 0 6px; }
+  p  { font-size: 14px; margin: 0 0 18px; opacity: .8; }
+  button.open {
+    display: block; width: 100%; padding: 15px;
+    border: 1.5px solid #C99B45; background: #FFFDF6; color: #6B5116;
+    font: inherit; font-size: 16px;
+  }
+
+  /* ---------------- the camera overlay ----------------
+     A sheet over everything: the live picture underneath, the object
+     drawn on top of it with a transparent background, and the controls
+     above both. */
+  #cam {
+    position: fixed; inset: 0; z-index: 9999;
+    display: none; background: #000;
+    overscroll-behavior: none; touch-action: none;
+  }
+  #cam.on { display: block; }
+  #cam video {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%; object-fit: cover;
+    background: #000;
+  }
+  #cam model-viewer {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    background-color: transparent;
+    --poster-color: transparent;
+    --progress-bar-color: #C79B45;
+  }
+  #cam .bar {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    padding: 18px 20px calc(22px + env(safe-area-inset-bottom));
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 14px;
+    background: linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,0));
+  }
+  #cam .bar button {
+    border: 1.5px solid rgba(255,253,246,.85);
+    background: rgba(0,0,0,.3); color: #FFFDF6;
+    font: inherit; font-size: 14px;
+    padding: 10px 16px;
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  }
+  #cam .shutter {
+    width: 66px; height: 66px; border-radius: 50%;
+    border: 3px solid rgba(255,253,246,.9);
+    background: rgba(255,253,246,.22);
+    padding: 0;
+  }
+  #cam .hint {
+    position: absolute; left: 0; right: 0; top: calc(18px + env(safe-area-inset-top));
+    text-align: center; color: #FFFDF6; font-size: 13.5px;
+    text-shadow: 0 1px 6px rgba(0,0,0,.7);
+    pointer-events: none;
+    transition: opacity .5s ease;
+  }
+  #cam .hint.gone { opacity: 0; }
+  #cam .err {
+    position: absolute; inset: 0;
+    display: none; flex-direction: column; justify-content: center;
+    padding: 30px 26px; gap: 12px;
+    background: #F7F1E2; color: #3A2E1C; text-align: center;
+  }
+  #cam.failed .err { display: flex; }
+  #cam.failed video, #cam.failed .hint { display: none; }
+</style>
+</head>
+<body>
+
+<h1>相機疊合原型</h1>
+<p>不經過 Scene Viewer，網頁自己開相機，把模型畫在畫面上。手指拖曳轉動，兩指捏合縮放。</p>
+<button class="open" id="go" type="button">在現實中檢視（AR）</button>
+
+<div id="cam" role="dialog" aria-modal="true" aria-label="相機檢視">
+  <video id="feed" playsinline autoplay muted></video>
+  <model-viewer id="cmv"
+    src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+    camera-controls
+    camera-orbit="0deg 78deg 190%"
+    min-camera-orbit="auto auto 70%"
+    max-camera-orbit="auto auto 600%"
+    disable-tap
+    interaction-prompt="none"
+    environment-image="neutral"
+    exposure="1.1"
+    shadow-intensity="0"
+    touch-action="none"
+    alt="模型"></model-viewer>
+  <p class="hint" id="hint">把鏡頭對著桌面，用手指轉動和縮放</p>
+  <div class="bar">
+    <button type="button" id="close">關閉</button>
+    <button type="button" class="shutter" id="shot" aria-label="拍照"></button>
+    <button type="button" id="reset">重設</button>
+  </div>
+  <div class="err">
+    <strong id="errt">無法開啟相機</strong>
+    <span id="errb"></span>
+    <button type="button" id="close2" style="margin-top:10px;padding:12px;border:1.5px solid #C99B45;background:#FFFDF6;font:inherit">關閉</button>
+  </div>
+</div>
+
+<script type="module"
+  src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
+<script>
+(function () {
+  var cam  = document.getElementById('cam');
+  var feed = document.getElementById('feed');
+  var mv   = document.getElementById('cmv');
+  var hint = document.getElementById('hint');
+  var stream = null, hintTimer = 0;
+
+  function fail(msg) {
+    cam.classList.add('failed');
+    document.getElementById('errb').textContent = msg;
+  }
+
+  async function open() {
+    cam.classList.add('on');
+    cam.classList.remove('failed');
+    hint.classList.remove('gone');
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(function () { hint.classList.add('gone'); }, 4000);
+
+    /* The camera needs a secure page and the reader's permission. Both
+       can be refused, and each refusal gets its own sentence rather than
+       a blank black screen. */
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      fail('這個瀏覽器沒有提供相機介面。'); return;
+    }
+    if (!window.isSecureContext) {
+      fail('相機只能在 https 網址下開啟，目前的網址不是。'); return;
+    }
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } }, audio: false
+      });
+      feed.srcObject = stream;
+      await feed.play().catch(function () {});
+    } catch (e) {
+      var n = e && e.name;
+      fail(n === 'NotAllowedError' ? '相機權限被拒絕。請在網址列左邊的鎖頭圖示裡允許相機，再試一次。'
+         : n === 'NotFoundError'  ? '找不到相機。'
+         : '相機開啟失敗：' + (e && e.message ? e.message : e));
+    }
+  }
+
+  function close() {
+    cam.classList.remove('on');
+    clearTimeout(hintTimer);
+    if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
+    feed.srcObject = null;
+  }
+
+  document.getElementById('go').addEventListener('click', open);
+  document.getElementById('close').addEventListener('click', close);
+  document.getElementById('close2').addEventListener('click', close);
+  document.getElementById('reset').addEventListener('click', function () {
+    mv.cameraOrbit = '0deg 78deg 190%';
+    mv.fieldOfView = 'auto';
+  });
+
+  /* ---- the photograph ----
+     The picture and the object are two separate layers on screen, so a
+     snapshot has to put them back together: the video frame first, then
+     model-viewer's own canvas over it at the same size. */
+  document.getElementById('shot').addEventListener('click', async function () {
+    try {
+      var w = feed.videoWidth, h = feed.videoHeight;
+      if (!w || !h) return;
+      var c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      var g = c.getContext('2d');
+
+      /* The video is shown cropped to fill the screen, so the saved
+         picture is cropped the same way rather than squashed. */
+      var vr = w / h, sr = cam.clientWidth / cam.clientHeight, sw, sh, sx, sy;
+      if (vr > sr) { sh = h; sw = h * sr; sx = (w - sw) / 2; sy = 0; }
+      else         { sw = w; sh = w / sr; sx = 0; sy = (h - sh) / 2; }
+      c.width = Math.round(sw); c.height = Math.round(sh);
+      g.drawImage(feed, sx, sy, sw, sh, 0, 0, c.width, c.height);
+
+      var shot = await mv.toBlob({ idealAspect: false });
+      var img = new Image();
+      img.src = URL.createObjectURL(shot);
+      await img.decode();
+      g.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(img.src);
+
+      c.toBlob(function (blob) {
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'mackay-ar.png';
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+      }, 'image/png');
+    } catch (e) { fail('拍照失敗：' + e); }
+  });
+})();
+</script>
+</body>
+</html>
