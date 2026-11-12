@@ -34,66 +34,7 @@
       pointer-events: none;
     }
 
-    /* ---------------- the three marks ----------------
-       Nothing but a bead of light. The object itself is painted into the
-       room already; this only says that there is something here. */
-    .spot {
-      position: absolute; z-index: 3;
-      width: 44px; height: 44px; padding: 0;
-      transform: translate(-50%, -50%);
-      display: flex; flex-direction: column; align-items: center;
-      justify-content: center;
-      border: 0; background: none; cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .spot .ring {
-      position: absolute; left: 50%; top: 50%;
-      width: 44px; height: 44px; margin: -22px 0 0 -22px;
-      border-radius: 50%;
-      border: 1px solid rgba(255, 207, 122, 0.5);
-      animation: spotRipple 3.6s ease-out infinite;
-    }
-    .spot .bead {
-      position: absolute; left: 50%; top: 50%;
-      width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; border-radius: 50%;
-      background: radial-gradient(circle at 36% 32%, #FFF6DF 0%, #FFCE7C 44%, #D4902A 100%);
-      box-shadow: 0 0 0 1.5px rgba(108, 62, 8, 0.6),
-                  0 0 16px 6px rgba(255, 186, 66, 0.45),
-                  0 2px 4px rgba(0, 0, 0, 0.5);
-      animation: spotBreathe 3.6s ease-in-out infinite;
-    }
-    .spot:hover .bead, .spot:focus-visible .bead { animation-duration: 1.6s; }
-    .spot:focus-visible { outline: 2px solid #F5D77F; outline-offset: 5px; border-radius: 50%; }
-    @keyframes spotBreathe {
-      0%, 100% { transform: scale(0.9); } 50% { transform: scale(1.18); }
-    }
-    @keyframes spotRipple {
-      0%   { transform: scale(0.38); opacity: .8; }
-      100% { transform: scale(1.5);  opacity: 0; }
-    }
-    .spot .tag {
-      position: absolute; left: 50%; bottom: calc(100% - 4px);
-      transform: translate(-50%, 0) scale(.96); transform-origin: 50% 100%;
-      white-space: nowrap; padding: 6px 15px; border-radius: 999px;
-      background: rgba(20, 14, 8, 0.52);
-      -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
-      border: 1px solid rgba(240, 220, 180, 0.24);
-      font-family: 'Songti TC', 'Noto Serif TC', 'PMingLiU', 'Huninn', serif;
-      font-size: 13.5px; letter-spacing: .12em; color: #F3E8D2;
-      text-shadow: 0 1px 3px rgba(0, 0, 0, .7);
-      opacity: 0; pointer-events: none;
-      transition: opacity .3s ease, transform .3s var(--ease);
-      will-change: opacity, transform;
-    }
-    html[lang^="en"] .spot .tag {
-      font-family: 'Didot', 'Hoefler Text', Georgia, serif; letter-spacing: .06em;
-    }
-    .spot:hover .tag, .spot:focus-visible .tag, .spot.show .tag {
-      opacity: 1; transform: translate(-50%, -5px) scale(1);
-    }
-    .spot.done .bead { filter: saturate(.72) brightness(.9); }
-
-    /* Edge markers: only there when an object is out of frame that way. */
+    /* Edge markers: there while the view still has room to turn. */
     .edge {
       position: absolute; top: 50%; z-index: 3;
       width: 44px; height: 68px; margin-top: -34px; padding: 0;
@@ -257,9 +198,13 @@
     #jr-pane.dragging { cursor: grabbing; }
 
     #jr-track { position: relative; flex: 0 0 auto; height: 100%; padding: 0 3vw; }
+    /* The sheet is a cut out with a real deckle edge, so the shadow has to
+       be soft and offset downward only. A tight dark shadow traced that
+       torn outline and read as a black fringe along the top. */
     #jr-bg {
       display: block; height: 100%; width: auto; max-width: none;
-      filter: drop-shadow(0 18px 34px rgba(0, 0, 0, .62));
+      filter: drop-shadow(0 20px 30px rgba(24, 14, 4, .42))
+              drop-shadow(0 2px 6px rgba(24, 14, 4, .18));
       -webkit-user-drag: none;
     }
 
@@ -294,56 +239,122 @@
       filter: drop-shadow(0 5px 2px rgba(74, 52, 24, .36))
               drop-shadow(0 14px 20px rgba(52, 36, 16, .38));
     }
+    /* Hidden outright until the story has been read, not merely faded. */
+    /* The same chop chapter one presses: a ring of cinnabar on pale
+       paper, turned a little the way a hand turns it. Drawn rather than
+       pasted, so both chapters share one object and one size. */
     .stk .mark {
-      position: absolute; width: 26%; height: auto;
-      right: -13%; bottom: -11%;
-      opacity: 0; transform: scale(.2) rotate(-24deg);
-      pointer-events: none;
-      /* Printed into the paper rather than pasted on top of it. */
-      mix-blend-mode: multiply;
-      filter: drop-shadow(0 2px 4px rgba(90, 30, 18, .3));
+      display: none;
+      position: absolute; right: -16px; bottom: -14px;
+      width: 50px; height: 50px; border-radius: 50%;
+      place-items: center;
+      border: 2.4px solid #A62E22; color: #A62E22;
+      background: rgba(253, 246, 236, .84);
+      box-shadow: 0 1px 4px rgba(58, 34, 6, .3);
+      font-family: 'Huninn', 'Noto Sans TC', serif;
+      font-size: 16.5px; line-height: 1.05; letter-spacing: .02em;
+      text-align: center; pointer-events: none;
     }
-    .stk.done .mark { animation: stampDown .35s cubic-bezier(.2, 1.5, .4, 1) forwards; }
+    .stk.done .mark {
+      display: grid;
+      animation: stampDown .35s cubic-bezier(.2, 1.5, .4, 1) forwards;
+    }
+    /* Down from above at one and four tenths, settling true at one, with
+       the small turn a hand gives a chop. */
     @keyframes stampDown {
-      0%   { opacity: 0; transform: scale(1.3) rotate(-22deg); }
-      55%  { opacity: 1; transform: scale(0.94) rotate(-7deg); }
-      100% { opacity: 1; transform: scale(1) rotate(-9deg); }
+      0%   { opacity: 0; transform: scale(1.4) rotate(-22deg); }
+      55%  { opacity: 1; transform: scale(0.95) rotate(-8deg); }
+      100% { opacity: 1; transform: scale(1)    rotate(-11deg); }
     }
 
-    /* ---------------- the gold mark that says this one is unread ----------------
-       The same light chapter one puts on its stations: a small warm bead
-       that breathes, with one ring going out from it. It leaves when the
-       chop goes down. */
+    /* ---------------- the gold star mark ----------------
+       The same piece chapter one puts on its stations, so a reader who
+       has already learned what a gold bead means does not have to learn
+       it twice: a struck disc of amber brass with a dark rim, a four
+       point star cut into the face of it, breathing, with one ring going
+       out. It leaves when the chop goes down. */
+    /* Bottom left: the annotations and their arrows come down into the
+       top of each cut sheet, and the chop goes on the bottom right, so
+       this is the one free shoulder. */
     .stk .spark {
-      position: absolute; top: -8px; right: -16px;
-      width: 36px; height: 36px; display: grid; place-items: center;
+      position: absolute; left: -16px; bottom: -8px;
+      width: 32px; height: 32px; display: grid; place-items: center;
       pointer-events: none;
     }
     .stk .spark i {
-      position: absolute; width: 24px; height: 24px; border-radius: 50%;
-      border: 1.6px solid #8A4E08;
-      background: radial-gradient(circle at 42% 36%,
-        #FFF3D2 0%, #FFE09A 38%, #F0B84E 68%, #D68C24 100%);
-      box-shadow: 0 0 0 1px rgba(255, 248, 228, .75),
-                  0 2px 6px rgba(58, 34, 6, .5),
-                  0 0 18px 6px rgba(232, 170, 60, .7);
-      animation: stnBreathe 3.1s ease-in-out infinite;
+      position: absolute; inset: 0; border-radius: 50%;
+      border: 2px solid #6B3E07;
+      background: radial-gradient(circle at 38% 32%,
+        #FFF6DE 0%, #FFE2A2 30%, #E8B64E 62%, #C2871F 85%, #A06A14 100%);
+      box-shadow: 0 0 12px rgba(212, 175, 55, 0.7),
+                  0 1px 3px rgba(48, 28, 4, .5),
+                  inset 0 1px 2px rgba(255, 248, 224, .75);
+      animation: starBreathe 3.1s ease-in-out infinite;
+    }
+    /* The star is cut into the disc, so it is the shadow that draws it. */
+    .stk .spark b {
+      position: relative; z-index: 1;
+      font-family: 'Huninn', 'Noto Sans TC', serif;
+      font-size: 13px; line-height: 1; font-weight: 400; font-style: normal;
+      color: #6B3E07; text-shadow: 0 1px 0 rgba(255, 244, 214, .65);
+      animation: starBreathe 3.1s ease-in-out infinite;
     }
     .stk .spark::after {
-      content: ''; position: absolute; width: 24px; height: 24px;
+      content: ''; position: absolute; inset: 0;
       border-radius: 50%; border: 1.5px solid rgba(160, 94, 16, .7);
-      animation: stnRipple 3.1s ease-out infinite;
+      animation: starRipple 3.1s ease-out infinite;
     }
     .stk.done .spark { display: none; }
-    @keyframes stnBreathe {
+    @keyframes starBreathe {
       0%, 100% { transform: scale(0.90); opacity: .88; }
       50%      { transform: scale(1.15); opacity: 1; }
     }
-    @keyframes stnRipple {
+    @keyframes starRipple {
       0%   { transform: scale(1);   opacity: .75; }
-      70%  { transform: scale(2.3); opacity: 0; }
-      100% { transform: scale(2.3); opacity: 0; }
+      70%  { transform: scale(2.2); opacity: 0; }
+      100% { transform: scale(2.2); opacity: 0; }
     }
+
+    /* ---------------- the trail between the stations ----------------
+       A walked line in warm gold brown. Each leg is held back until the
+       station behind it has been read, then it is laid down stroke by
+       stroke: the dashes themselves never move, a mask simply uncovers
+       them from one end to the other. */
+    #jr-trail {
+      position: absolute; left: 0; top: 0; z-index: 1;
+      pointer-events: none; overflow: visible;
+    }
+    #jr-trail .leg {
+      fill: none; stroke: #C8841C; stroke-width: 2.4; stroke-linecap: round;
+      stroke-dasharray: 2 13;
+      filter: drop-shadow(0 0 4px rgba(255, 228, 160, .9));
+      opacity: 0;
+    }
+    /* Laid down once, then the dashes keep walking, which is what makes
+       the line read as a route rather than a border. Same two keyframes
+       chapter one uses. */
+    #jr-trail .leg.drawn {
+      opacity: 1;
+      animation: trailIn .95s ease-out forwards,
+                 trailRun 1.5s linear .95s infinite;
+    }
+    @keyframes trailIn  { from { stroke-dashoffset: 260; } to { stroke-dashoffset: 0; } }
+    @keyframes trailRun { from { stroke-dashoffset: 0; }   to { stroke-dashoffset: -15; } }
+
+    /* ---------------- stations still to come ----------------
+       A locked sheet is there to be seen but not yet opened, so it lies
+       flat and pale and keeps still. */
+    .stk.locked {
+      opacity: .34; filter: grayscale(.55);
+      cursor: default; animation: none;
+      transform: translate(-50%, -50%) scale(0.86);
+    }
+    .stk.locked:hover { transform: translate(-50%, -50%) scale(0.86); }
+    .stk.locked img { filter: none; }
+    .stk.locked .spark { display: none; }
+    /* The mark arrives with the sheet it belongs to. */
+    .stk .spark { opacity: 0; transition: opacity .55s ease .25s; }
+    .stk.unlocked .spark { opacity: 1; }
 
     #jr-close {
       position: fixed; z-index: 19;
@@ -440,15 +451,21 @@
 
     /* Shown only when a device cannot do AR: the object turns here
        instead, rather than the button doing nothing. */
+    /* The object stands on paper, like everything else on this card. A
+       dark plate here read as a black hole punched through the page. */
     #arc-stage {
       position: relative; width: 100%; aspect-ratio: 4 / 3; margin: 0 0 28px;
-      background: radial-gradient(62% 72% at 50% 46%, #2A2314 0%, #191205 72%, #120D04 100%);
-      box-shadow: 0 0 0 1px rgba(107, 83, 52, .3);
+      background: linear-gradient(176deg, #FFFDF6 0%, #F7F1E2 62%, #F0E9D6 100%);
+      box-shadow: 0 1px 0 rgba(255, 255, 255, .9) inset,
+                  0 0 0 1px rgba(107, 83, 52, .3);
     }
     #arc-stage[hidden] { display: none; }
     #arc-stage model-viewer {
       position: absolute; inset: 0; width: 100%; height: 100%;
-      background: transparent; --poster-color: transparent;
+      background-color: transparent;
+      --poster-color: transparent;
+      --progress-bar-color: #C79B45;
+      --progress-mask: transparent;
     }
 
     #arc-plates { display: grid; gap: 26px; margin-bottom: 28px; }
@@ -752,7 +769,6 @@
 
     /* ---------------- narrow screens ---------------- */
     @media (max-width: 760px) {
-      .spot .tag { font-size: 12px; padding: 5px 12px; letter-spacing: .08em; }
       #jr-wrap { --gap-top: calc(var(--nav-h) + env(safe-area-inset-top) + 56px); padding-bottom: 70px; }
       #jr-bg { height: auto; width: calc(100vw * 3.6); max-height: 100%; }
       #jr-track { display: flex; align-items: center; height: auto; min-height: 100%; }
@@ -787,7 +803,8 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .spot .ring, .spot .bead, .stk, #jr-btn .paper, #jr-btn.nudge .paper { animation: none !important; }
-      .stk.done .mark { animation: none !important; opacity: 1; transform: scale(1) rotate(-9deg); }
+      .stk, .stk .spark i, .stk .spark::after, #jr-btn .paper, #jr-btn.nudge .paper { animation: none !important; }
+      #jr-trail .leg.drawn { animation: none !important; opacity: 1; stroke-dashoffset: 0; }
+      .stk.done .mark { animation: none !important; opacity: 1; transform: scale(1) rotate(-8deg); }
       #arc, #jr-pane { transition-duration: .01ms; }
     }

@@ -9,7 +9,6 @@
     const PMASK  = S2_MASK;
     const PANO_A = 2576 / 1274;
     const SCROLL = S2_SCROLL;
-    const STAMP  = S2_STAMP;
     const THEN   = S2_THEN;
     const NOW    = S2_NOW;
 
@@ -54,12 +53,13 @@
 
     const T = {
       zh: {
-        hint: '左右滑動看完整個醫館。點物件上的名牌可放到你的桌上看',
+        hint: '左右滑動看完整個醫館。展開下方的行醫手札，裡面有三段故事',
         journal: '展開行醫手札',
         next: '前往下一章 · 啟蒙',
         ar: '在現實中檢視 (AR)',
         arOff: 'AR 需要把這個網頁放到網路上才能啟動，例如 GitHub Pages，並把 s2 資料夾一起上傳。現在是從電腦本機開啟的，所以還沒有可以掃描的網址。',
         arNoDevice: '這台裝置的瀏覽器沒有提供 AR。用 Android 的 Chrome 或 iPhone 的 Safari 開啟同一個網址就可以。',
+        locked: '先讀完前一站，這張才會翻開',
         portalHint: '輕按推開木門',
         portalTitle: '1873 年滬尾偕醫館 至 今日馬偕紀念醫院',
         portalBody: '一間小小的避風診所，推開了北台灣近代醫學的百年守護。',
@@ -91,12 +91,13 @@
         },
       },
       en: {
-        hint: 'Drag to look around the clinic. Tap a nameplate to stand the object on your own desk',
+        hint: 'Drag to look around the clinic. Open the journal below for the three stories',
         journal: 'Open the medical journal',
         next: 'Next chapter · Enlightenment',
         ar: 'View it in your room (AR)',
         arOff: 'AR needs this page to be on the web, for example on GitHub Pages with the s2 folder uploaded alongside it. This copy is open from a local file, so there is no address to scan yet.',
         arNoDevice: 'This browser does not offer AR. Open the same address in Chrome on Android or Safari on iPhone.',
+        locked: 'Read the station before this one to turn this sheet',
         portalHint: 'Push the doors open',
         portalTitle: 'From the Hobe Mackay Clinic of 1873 to Mackay Memorial Hospital today',
         portalBody: 'A small shelter of a surgery opened a hundred years of modern medicine in northern Taiwan.',
@@ -173,12 +174,8 @@
     /* Wide enough and the view sits on the midpoint of the three objects
        so all of them are in frame. Narrow, and it opens on the first one,
        with the edge markers leading to the rest. */
-    function homePan() {
-      const s = Math.min((innerWidth / innerHeight) / PANO_A, 1);
-      const xs = OBJ.map(o => o.x);
-      const mid = (Math.min(...xs) + Math.max(...xs)) / 2;
-      return 0.5 - (mid * s + OBJ[0].x * (1 - s));
-    }
+    /* Nothing to centre on, so the room opens looking straight ahead. */
+    function homePan() { return 0; }
 
     /* ---------------- model-viewer, loaded once and only if needed ---- */
     let mvReady = null;
@@ -196,18 +193,11 @@
       return mvReady;
     }
 
-    /* ---------------- the objects in the room ---------------- */
-    OBJ.forEach(o => {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'spot';
-      b.dataset.id = o.id;
-      b.innerHTML = '<span class="ring"></span><span class="bead"></span><span class="tag"></span>';
-      b.addEventListener('click', () => openArc(o.id));
-      s2.appendChild(b);
-      o.el = b;
-      o.tagEl = b.querySelector('.tag');
-    });
+    /* ---------------- the room ----------------
+       Nothing is hung in it. The painting carries the candlelight and the
+       dust and nothing else; the way into the three stories is the
+       journal at the foot of the screen. The model files are fetched only
+       when somebody asks to see one in their own room. */
 
     /* One element per painted flame, laid over the artwork. */
     const dust = document.createElement('canvas');
@@ -231,15 +221,6 @@
     }
 
     function place() {
-      let offL = 0, offR = 0;
-      OBJ.forEach(o => {
-        const p = toScreen(o.x, o.y);
-        o.el.style.left = p.x + 'px';
-        o.el.style.top  = p.y + 'px';
-        const inView = p.x > 28 && p.x < innerWidth - 28;
-        o.el.style.visibility = inView ? 'visible' : 'hidden';
-        if (!inView) { if (p.x <= 28) offL++; else offR++; }
-      });
       const k = imgScale();
       LAMPS.forEach(L => {
         const p = toScreen(L.x, L.y);
@@ -250,8 +231,12 @@
         L.el.style.height = d + 'px';
         L.el.style.visibility = (p.x > -d && p.x < innerWidth + d) ? 'visible' : 'hidden';
       });
-      arrowL.classList.toggle('on', offL > 0);
-      arrowR.classList.toggle('on', offR > 0);
+      /* The markers point at room the viewer has not turned to yet.
+         Panning positive walks toward the left wall, so that is the side
+         still left to see while pan is short of its limit. */
+      const m = panRange();
+      arrowL.classList.toggle('on', pan < m - 0.002);
+      arrowR.classList.toggle('on', pan > -m + 0.002);
     }
 
     const arrowL = document.createElement('button');
@@ -265,10 +250,7 @@
     });
     function nudge(dir) {
       hideHint();
-      const t = OBJ.map(o => ({ o, x: toScreen(o.x, o.y).x }))
-                   .filter(v => dir < 0 ? v.x <= 28 : v.x >= innerWidth - 28)
-                   .sort((a, b) => dir < 0 ? b.x - a.x : a.x - b.x)[0];
-      glide(t ? 0.5 - t.o.x : pan + dir * 0.18);
+      glide(pan - dir * 0.18);
     }
     let gliding = 0;
     function glide(to) {
@@ -414,7 +396,7 @@
     (function () {
       let id = null, x0 = 0, p0 = 0, moved = 0;
       s2.addEventListener('pointerdown', e => {
-        if (e.target.closest('.spot, .edge')) return;
+        if (e.target.closest('.edge')) return;
         id = e.pointerId; x0 = e.clientX; p0 = pan; moved = 0;
         s2.setPointerCapture(id);
       });
@@ -501,12 +483,31 @@
       b.className = 'stk';
       b.dataset.id = o.id;
       b.innerHTML = '<img src="' + o.img + '" alt="">' +
-                    '<span class="spark" aria-hidden="true"><i></i></span>' +
-                    '<img class="mark" src="' + STAMP + '" alt="">';
+                    '<span class="spark" aria-hidden="true"><i></i><b>\u2726</b></span>' +
+                    '<span class="mark" aria-hidden="true">\u5df2\u63a2</span>';
       b.addEventListener('click', () => openArc(o.id));
       jrTrack.appendChild(b);
       o.stk = b;
     });
+
+    /* The walked line between the three stations, drawn under the paper
+       cuts. It dips between stops the way a route sketched by hand does,
+       rather than ruling straight from one to the next. */
+    const jrTrail = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    jrTrail.id = 'jr-trail';
+    jrTrail.setAttribute('aria-hidden', 'true');
+    /* One leg per gap between stations. The dashes do the work on their
+       own: they slide into place once, then keep walking, which is the
+       same pair of keyframes chapter one uses. */
+    const SVGNS = 'http://www.w3.org/2000/svg';
+    const LEGS = [];
+    for (let i = 0; i < OBJ.length - 1; i++) {
+      const leg = document.createElementNS(SVGNS, 'path');
+      leg.setAttribute('class', 'leg');
+      jrTrail.appendChild(leg);
+      LEGS.push({ leg: leg });
+    }
+    jrTrack.insertBefore(jrTrail, jrTrack.firstChild.nextSibling);
 
     function layout() {
       const w = jrBg.offsetWidth, h = jrBg.offsetHeight;
@@ -517,6 +518,39 @@
         o.stk.style.top   = (oy + o.sy * h) + 'px';
         o.stk.style.width = (o.sw * w) + 'px';
         o.px = ox + o.sx * w;
+      });
+
+      jrTrail.setAttribute('width', w);
+      jrTrail.setAttribute('height', h);
+      jrTrail.style.left = ox + 'px';
+      jrTrail.style.top  = oy + 'px';
+      /* Station to station, measured off the gold marks themselves so the
+         line always meets them however the sheet is sized. It sags
+         between stops the way a route sketched by hand does. */
+      /* Measured off the cut sheet, not off the gold mark: once a station
+         has been read its mark is display none and would measure zero,
+         which would fold the line in on itself. The mark sits on the
+         sheet's lower left corner, so that corner is the anchor. */
+      const base = jrTrack.getBoundingClientRect();
+      const mid = OBJ.map(o => {
+        const r = o.stk.getBoundingClientRect();
+        if (!r.width) return null;
+        return { x: r.left   - base.left - ox,
+                 y: r.bottom - base.top  - oy - 8 };
+      });
+      LEGS.forEach((L, i) => {
+        const a = mid[i], b = mid[i + 1];
+        if (!a || !b) return;
+        /* Leave each mark at its rim rather than from its centre. */
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const len = Math.hypot(dx, dy) || 1, gap = 22;
+        const ax = a.x + dx / len * gap, ay = a.y + dy / len * gap;
+        const bx = b.x - dx / len * gap, by = b.y - dy / len * gap;
+        const d = 'M' + ax.toFixed(1) + ' ' + ay.toFixed(1) +
+                  ' Q' + ((ax + bx) / 2).toFixed(1) + ' ' +
+                  (Math.max(ay, by) + h * 0.075).toFixed(1) + ' ' +
+                  bx.toFixed(1) + ' ' + by.toFixed(1);
+        L.leg.setAttribute('d', d);
       });
     }
     jrBg.addEventListener('load', layout);
@@ -575,6 +609,11 @@
 
     /* ---------------- the archive card ---------------- */
     function openArc(id) {
+      /* A sheet that has not been reached yet does not open, however it
+         was reached: by the paper cut, by the keyboard, or by code. */
+      const at = OBJ.findIndex(o => o.id === id);
+      if (at > 0 && !read.has(OBJ[at - 1].id)) return;
+
       const t = T[lang], c = t.arc[id];
       openId = id;
       q('#arc-kicker').textContent = c.k;
@@ -655,16 +694,30 @@
       }
     }
 
+    /* The journal opens on the first station alone. Each one read lays
+       down the leg to the next and brings its mark up, so the sheet fills
+       in the order the stories happened rather than all at once. */
+    function gate() {
+      const t = T[lang];
+      OBJ.forEach((o, i) => {
+        const open = i === 0 || read.has(OBJ[i - 1].id);
+        o.stk.classList.toggle('locked', !open);
+        o.stk.classList.toggle('unlocked', open);
+        o.stk.disabled = !open;
+        o.stk.setAttribute('aria-disabled', String(!open));
+        if (!open) o.stk.setAttribute('aria-label', t.locked);
+      });
+      LEGS.forEach((L, i) => L.leg.classList.toggle('drawn', read.has(OBJ[i].id)));
+    }
+
     function paint() {
       const t = T[lang];
       OBJ.forEach(o => {
-        o.tagEl.textContent = t.names[o.id];
-        o.el.setAttribute('aria-label', t.names[o.id] + ' · ' + t.ar);
-        o.el.classList.toggle('done', read.has(o.id));
         o.stk.classList.toggle('done', read.has(o.id));
         o.stk.setAttribute('aria-label', t.arc[o.id].t);
         if (o.mv) o.mv.setAttribute('alt', t.names[o.id]);
       });
+      gate();
       q('#jr-label').textContent = t.journal;
       jrCnt.textContent = read.size + '/' + OBJ.length;
       nextBtn.textContent = t.next;
@@ -801,6 +854,14 @@
        The models are not in the room any more, so one is built only when
        somebody asks for it, inside the card it was asked from. */
     const arcStage = q('#arc-stage');
+
+    /* The placeholder the plate shows while a model is still arriving:
+       the same paper as the card, so nothing ever flashes black. */
+    const POSTER = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600">' +
+      '<defs><radialGradient id="p" cx="50%" cy="46%" r="62%">' +
+      '<stop offset="0" stop-color="#FFFDF6"/><stop offset="1" stop-color="#F0E9D6"/>' +
+      '</radialGradient></defs><rect width="800" height="600" fill="url(#p)"/></svg>');
     async function summon(id) {
       const o = OBJ.find(v => v.id === id);
       if (!o || !hosted) { openQR(id, 'host'); return; }
@@ -817,6 +878,9 @@
         /* Quick Look will not take a glTF file, so iPhones are handed the
            USDZ build of the same model. */
         if (o.usdz) mv.setAttribute('ios-src', o.usdz);
+        /* Paper, held until the first frame of the model is ready, so the
+           plate is never empty and never dark. */
+        mv.setAttribute('poster', POSTER);
         mv.setAttribute('alt', T[lang].names[id]);
         mv.setAttribute('camera-controls', '');
         mv.setAttribute('auto-rotate', '');
