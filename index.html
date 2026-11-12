@@ -4272,8 +4272,10 @@
       q('#qr-kicker').textContent = t.qrKicker;
       q('#qr-title').textContent  = name;
 
-      /* A code is only worth drawing when there is an address behind it. */
-      const url = hosted ? location.href : '';
+      /* A code is only worth drawing when there is an address behind it.
+         The station rides along in the address so the phone that reads
+         it arrives at this object rather than at the front door. */
+      const url = hosted ? arLink(id) : '';
       const drew = url ? drawQR(url) : false;
       qrPlate.classList.toggle('is-empty', !drew);
       q('#qr-note').textContent = drew ? t.qrScan
@@ -4313,14 +4315,14 @@
        card is left in place for the phones that can do the real thing. */
     const CAMT = {
       zh: { hint: '把鏡頭對著桌面，手指拖曳轉動，兩指縮放',
-            close: '關閉', reset: '重設', shot: '拍照',
+            close: '關閉', reset: '重設', shot: '拍照', again: '再試一次',
             noApi: '這個瀏覽器沒有提供相機功能。',
             noHttps: '相機只能在 https 網址下開啟。',
             denied: '相機權限被拒絕了。請在網址列的鎖頭圖示裡允許相機，再開一次。',
             none: '這台裝置找不到相機。',
             failed: '相機開啟失敗：' },
       en: { hint: 'Point at a table. Drag to turn, pinch to resize.',
-            close: 'Close', reset: 'Reset', shot: 'Take a photo',
+            close: 'Close', reset: 'Reset', shot: 'Take a photo', again: 'Try again',
             noApi: 'This browser offers no camera.',
             noHttps: 'The camera is only available on an https address.',
             denied: 'Camera permission was refused. Allow it from the lock icon beside the address, then open this again.',
@@ -4329,7 +4331,7 @@
     };
 
     let camWrap = null, camFeed = null, camMV = null, camHint = null,
-        camErrText = null, camStream = null, camHintTimer = 0;
+        camErrText = null, camStream = null, camHintTimer = 0, camId = null;
     const CAM_HOME = '0deg 78deg 190%';
 
     function buildCam() {
@@ -4371,11 +4373,15 @@
       err.className = 'cam-err';
       camErrText = document.createElement('p');
       camErrText.style.margin = '0';
+      const eAgain = document.createElement('button');
+      eAgain.type = 'button';
+      eAgain.addEventListener('click', () => { if (camId) openCam(camId); });
       const eClose = document.createElement('button');
       eClose.type = 'button';
       eClose.addEventListener('click', closeCam);
+      camWrap._b.errAgain = eAgain;
       camWrap._b.errClose = eClose;
-      err.appendChild(camErrText); err.appendChild(eClose);
+      err.appendChild(camErrText); err.appendChild(eAgain); err.appendChild(eClose);
       camWrap.appendChild(err);
 
       document.body.appendChild(camWrap);
@@ -4391,11 +4397,13 @@
       const o = OBJ.find(v => v.id === id);
       if (!o) return;
       const t = CAMT[lang] || CAMT.zh;
+      camId = id;
       buildCam();
 
       camWrap._b.close.textContent = t.close;
       camWrap._b.reset.textContent = t.reset;
       camWrap._b.errClose.textContent = t.close;
+      camWrap._b.errAgain.textContent = t.again;
       camWrap._b.shot.setAttribute('aria-label', t.shot);
       camWrap.setAttribute('aria-label', T[lang].names[id]);
       camHint.textContent = t.hint;
@@ -4491,6 +4499,43 @@
       } catch (e) { /* a refused snapshot is not worth a dialog */ }
     }
 
+
+    /* ---------------- arriving from a scanned code ----------------
+       ?ar=<station> names the object to open. It is written onto the
+       code in the card and read back here, so the phone that reads the
+       code lands on the object itself. */
+    function arLink(id) {
+      const u = new URL(location.href);
+      u.hash = '';
+      u.searchParams.set('ar', id);
+      return u.href;
+    }
+
+    function wantedFromLink() {
+      let id = null;
+      try { id = new URL(location.href).searchParams.get('ar'); } catch (_) {}
+      return (id && OBJ.some(o => o.id === id)) ? id : null;
+    }
+
+    /* Held until the chapter is on screen, then spent. The address is
+       tidied at the same time so a reload does not open the camera
+       again, and so the reader can share the page without dragging
+       everyone else into a camera. */
+    let arPending = wantedFromLink();
+    function spendLink() {
+      if (!arPending) return;
+      const id = arPending;
+      arPending = null;
+      try {
+        const u = new URL(location.href);
+        u.searchParams.delete('ar');
+        history.replaceState(null, '', u.pathname + u.search + u.hash);
+      } catch (_) {}
+      /* A moment for the chapter to settle before the sheet covers it,
+         so closing the camera does not reveal a half drawn page. */
+      setTimeout(() => openCam(id), 700);
+    }
+
     addEventListener('keydown', e => {
       if (e.key === 'Escape' && camWrap && camWrap.classList.contains('is-on')) closeCam();
     });
@@ -4535,6 +4580,7 @@
         showHint(T[lang].hint);
         sizeDust(); seedMotes(); syncFX();
         requestAnimationFrame(layout);
+        spendLink();
       } else {
         if (arcWrap.classList.contains('is-in')) closeArc();
         if (jrWrap.classList.contains('is-in')) closeJournal();
@@ -4697,6 +4743,12 @@
           screen.style.display = 'none';
           screen.remove();
           warm();
+          /* A code read by a phone names a station in the second
+             chapter, so that is where the piece opens. */
+          try {
+            const want = new URL(location.href).searchParams.get('ar');
+            if (want && typeof goToScene === 'function') goToScene(2);
+          } catch (_) {}
         }, OUT_MS + 60);
       }, HOLD_MS);
     }
