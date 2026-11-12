@@ -1805,6 +1805,74 @@
       #loading-screen.is-out { transform: none; }
     }
 
+    /* ---------------- the page's own camera view ----------------
+       Drawn here rather than handed to the phone's AR viewer, which is
+       not present on every Android. The picture lies underneath and the
+       object is drawn over it with a transparent background. */
+    #cam-ar {
+      position: fixed; inset: 0; z-index: 400;
+      display: none; background: #0B0906;
+      overscroll-behavior: none; touch-action: none;
+    }
+    #cam-ar.is-on { display: block; }
+    #cam-ar video {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%; object-fit: cover; background: #0B0906;
+    }
+    #cam-ar model-viewer {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      background-color: transparent;
+      --poster-color: transparent;
+      --progress-bar-color: #C79B45;
+      --progress-mask: transparent;
+    }
+    #cam-ar .cam-bar {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      padding: 18px 20px calc(22px + env(safe-area-inset-bottom));
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+      background: linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,0));
+    }
+    #cam-ar .cam-bar button {
+      border: 1.5px solid rgba(255, 253, 246, .85);
+      background: rgba(0, 0, 0, .3); color: #FFFDF6;
+      font-family: 'Huninn', 'Noto Sans TC', sans-serif; font-size: 14px;
+      padding: 10px 16px; cursor: pointer;
+      -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    }
+    #cam-ar .cam-shot {
+      width: 66px; height: 66px; border-radius: 50%; padding: 0;
+      border: 3px solid rgba(255, 253, 246, .92) !important;
+      background: rgba(255, 253, 246, .22) !important;
+    }
+    #cam-ar .cam-hint {
+      position: absolute; left: 0; right: 0; top: calc(18px + env(safe-area-inset-top));
+      margin: 0; padding: 0 24px; text-align: center;
+      color: #FFFDF6; font-family: 'Huninn', 'Noto Sans TC', sans-serif;
+      font-size: 13.5px; text-shadow: 0 1px 6px rgba(0, 0, 0, .75);
+      pointer-events: none; transition: opacity .5s ease;
+    }
+    #cam-ar .cam-hint.is-gone { opacity: 0; }
+    /* When the camera cannot be had, the reason is given on paper rather
+       than left as a black screen. */
+    #cam-ar .cam-err {
+      position: absolute; inset: 0; display: none;
+      flex-direction: column; justify-content: center; gap: 14px;
+      padding: 34px 28px; text-align: center;
+      background: linear-gradient(176deg, #FFFDF6 0%, #F7F1E2 62%, #F0E9D6 100%);
+      color: #3A2E1C; font-family: 'Huninn', 'Noto Sans TC', sans-serif;
+      font-size: 15px; line-height: 1.8;
+    }
+    #cam-ar.is-failed .cam-err { display: flex; }
+    #cam-ar.is-failed video,
+    #cam-ar.is-failed model-viewer,
+    #cam-ar.is-failed .cam-hint,
+    #cam-ar.is-failed .cam-bar { display: none; }
+    #cam-ar .cam-err button {
+      align-self: center; margin-top: 6px; padding: 12px 24px;
+      border: 1.5px solid #C99B45; background: #FFFDF6; color: #6B5116;
+      font: inherit; cursor: pointer;
+    }
+
   </style>
 </head>
 <body>
@@ -3649,6 +3717,7 @@
     }
 
     function closeArc() {
+      closeCam();
       const id = openId;
       openId = null;
       arcWrap.classList.remove('is-in');
@@ -4229,9 +4298,210 @@
     const PHONE = /iPad|iPhone|iPod|Android/i.test(navigator.userAgent) ||
                   (matchMedia('(hover: none) and (pointer: coarse)').matches);
 
+
+    /* ---------------- the page's own camera view ----------------
+       Android hands a model to Scene Viewer, which is a separate
+       component Google only ships to the phones on its list. On a phone
+       that is not on it the handover goes nowhere and the press looks
+       ignored, which is no good for a piece meant to be opened by
+       strangers. So this draws the thing itself: the camera underneath,
+       the object over it on a transparent background, turned and sized
+       by hand. Nothing is asked of the phone but a camera.
+
+       It is not surface tracking. The object sits in front of the lens
+       rather than resting on the table, and the model-viewer cube in the
+       card is left in place for the phones that can do the real thing. */
+    const CAMT = {
+      zh: { hint: '把鏡頭對著桌面，手指拖曳轉動，兩指縮放',
+            close: '關閉', reset: '重設', shot: '拍照',
+            noApi: '這個瀏覽器沒有提供相機功能。',
+            noHttps: '相機只能在 https 網址下開啟。',
+            denied: '相機權限被拒絕了。請在網址列的鎖頭圖示裡允許相機，再開一次。',
+            none: '這台裝置找不到相機。',
+            failed: '相機開啟失敗：' },
+      en: { hint: 'Point at a table. Drag to turn, pinch to resize.',
+            close: 'Close', reset: 'Reset', shot: 'Take a photo',
+            noApi: 'This browser offers no camera.',
+            noHttps: 'The camera is only available on an https address.',
+            denied: 'Camera permission was refused. Allow it from the lock icon beside the address, then open this again.',
+            none: 'No camera was found on this device.',
+            failed: 'The camera could not be opened: ' }
+    };
+
+    let camWrap = null, camFeed = null, camMV = null, camHint = null,
+        camErrText = null, camStream = null, camHintTimer = 0;
+    const CAM_HOME = '0deg 78deg 190%';
+
+    function buildCam() {
+      if (camWrap) return camWrap;
+      camWrap = document.createElement('div');
+      camWrap.id = 'cam-ar';
+      camWrap.setAttribute('role', 'dialog');
+      camWrap.setAttribute('aria-modal', 'true');
+
+      camFeed = document.createElement('video');
+      camFeed.setAttribute('playsinline', '');
+      camFeed.setAttribute('autoplay', '');
+      camFeed.muted = true;
+      camWrap.appendChild(camFeed);
+
+      camHint = document.createElement('p');
+      camHint.className = 'cam-hint';
+      camWrap.appendChild(camHint);
+
+      const bar = document.createElement('div');
+      bar.className = 'cam-bar';
+      const bClose = document.createElement('button');
+      bClose.type = 'button';
+      bClose.addEventListener('click', closeCam);
+      const bShot = document.createElement('button');
+      bShot.type = 'button';
+      bShot.className = 'cam-shot';
+      bShot.addEventListener('click', snapCam);
+      const bReset = document.createElement('button');
+      bReset.type = 'button';
+      bReset.addEventListener('click', () => {
+        if (camMV) { camMV.cameraOrbit = CAM_HOME; camMV.fieldOfView = 'auto'; }
+      });
+      bar.appendChild(bClose); bar.appendChild(bShot); bar.appendChild(bReset);
+      camWrap.appendChild(bar);
+      camWrap._b = { close: bClose, shot: bShot, reset: bReset };
+
+      const err = document.createElement('div');
+      err.className = 'cam-err';
+      camErrText = document.createElement('p');
+      camErrText.style.margin = '0';
+      const eClose = document.createElement('button');
+      eClose.type = 'button';
+      eClose.addEventListener('click', closeCam);
+      camWrap._b.errClose = eClose;
+      err.appendChild(camErrText); err.appendChild(eClose);
+      camWrap.appendChild(err);
+
+      document.body.appendChild(camWrap);
+      return camWrap;
+    }
+
+    function camFail(msg) {
+      camWrap.classList.add('is-failed');
+      camErrText.textContent = msg;
+    }
+
+    async function openCam(id) {
+      const o = OBJ.find(v => v.id === id);
+      if (!o) return;
+      const t = CAMT[lang] || CAMT.zh;
+      buildCam();
+
+      camWrap._b.close.textContent = t.close;
+      camWrap._b.reset.textContent = t.reset;
+      camWrap._b.errClose.textContent = t.close;
+      camWrap._b.shot.setAttribute('aria-label', t.shot);
+      camWrap.setAttribute('aria-label', T[lang].names[id]);
+      camHint.textContent = t.hint;
+      camHint.classList.remove('is-gone');
+      camWrap.classList.remove('is-failed');
+      camWrap.classList.add('is-on');
+      clearTimeout(camHintTimer);
+      camHintTimer = setTimeout(() => camHint.classList.add('is-gone'), 4200);
+
+      /* The object. Built once and re-pointed when a different station
+         asks for it, so the element and its context are not thrown away
+         and rebuilt three times. */
+      if (await loadMV()) {
+        if (!camMV) {
+          camMV = document.createElement('model-viewer');
+          camMV.setAttribute('camera-controls', '');
+          camMV.setAttribute('disable-tap', '');
+          camMV.setAttribute('interaction-prompt', 'none');
+          camMV.setAttribute('environment-image', 'neutral');
+          camMV.setAttribute('exposure', '1.1');
+          camMV.setAttribute('shadow-intensity', '0');
+          camMV.setAttribute('touch-action', 'none');
+          camMV.setAttribute('min-camera-orbit', 'auto auto 70%');
+          camMV.setAttribute('max-camera-orbit', 'auto auto 600%');
+          camMV.setAttribute('loading', 'eager');
+          camWrap.insertBefore(camMV, camHint);
+        }
+        if (camMV.getAttribute('src') !== o.file) {
+          camMV.setAttribute('src', o.file);
+          camMV.setAttribute('alt', T[lang].names[id]);
+          camMV.setAttribute('camera-orbit', CAM_HOME);
+        }
+      }
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        camFail(t.noApi); return;
+      }
+      if (!window.isSecureContext) { camFail(t.noHttps); return; }
+      try {
+        camStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } }, audio: false
+        });
+        camFeed.srcObject = camStream;
+        await camFeed.play().catch(() => {});
+      } catch (e) {
+        const n = e && e.name;
+        camFail(n === 'NotAllowedError' ? t.denied
+              : n === 'NotFoundError'   ? t.none
+              : t.failed + ((e && e.message) || e));
+      }
+    }
+
+    function closeCam() {
+      if (!camWrap) return;
+      camWrap.classList.remove('is-on');
+      clearTimeout(camHintTimer);
+      if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+      camFeed.srcObject = null;
+    }
+
+    /* The picture and the object are two layers on screen, so a snapshot
+       puts them back together: the camera frame cropped the way the
+       screen crops it, then the object's own canvas over the top. */
+    async function snapCam() {
+      try {
+        const w = camFeed.videoWidth, h = camFeed.videoHeight;
+        if (!w || !h) return;
+        const sr = camWrap.clientWidth / camWrap.clientHeight, vr = w / h;
+        let sw, sh, sx, sy;
+        if (vr > sr) { sh = h; sw = h * sr; sx = (w - sw) / 2; sy = 0; }
+        else         { sw = w; sh = w / sr; sx = 0; sy = (h - sh) / 2; }
+
+        const c = document.createElement('canvas');
+        c.width = Math.round(sw); c.height = Math.round(sh);
+        const g = c.getContext('2d');
+        g.drawImage(camFeed, sx, sy, sw, sh, 0, 0, c.width, c.height);
+
+        if (camMV && camMV.toBlob) {
+          const blob = await camMV.toBlob({ idealAspect: false });
+          const img = new Image();
+          img.src = URL.createObjectURL(blob);
+          await img.decode();
+          g.drawImage(img, 0, 0, c.width, c.height);
+          URL.revokeObjectURL(img.src);
+        }
+        c.toBlob(b => {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(b);
+          a.download = 'mackay-' + (openId || 'ar') + '.png';
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        }, 'image/png');
+      } catch (e) { /* a refused snapshot is not worth a dialog */ }
+    }
+
+    addEventListener('keydown', e => {
+      if (e.key === 'Escape' && camWrap && camWrap.classList.contains('is-on')) closeCam();
+    });
+
     arcAr.addEventListener('click', () => {
       if (!openId) return;
-      if (PHONE) summon(openId);
+      /* The phone's own AR viewer is not on every phone, so the button
+         opens the view this page draws instead, which is on all of them.
+         The cube on the plate still offers the real thing where the
+         phone can do it. */
+      if (PHONE) openCam(openId);
       else openQR(openId, 'desktop');
     });
 
