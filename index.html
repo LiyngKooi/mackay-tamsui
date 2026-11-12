@@ -3953,7 +3953,13 @@
 
       const mv = arcStage.querySelector('model-viewer');
       if (mv && mv.dataset.id === id && mv.loaded && mv.canActivateAR) {
-        mv.activateAR();
+        /* The handover can still be turned down by the phone, and when
+           it is there is nothing to see. Say so rather than leave the
+           press looking ignored. */
+        try {
+          const go = mv.activateAR();
+          if (go && go.catch) go.catch(() => { if (openId === id) openQR(id, 'nodevice'); });
+        } catch (_) { openQR(id, 'nodevice'); }
         return;
       }
       if (mv && mv.failed) { showStageError(o); return; }
