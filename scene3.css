@@ -1,0 +1,91 @@
+
+    /* ================= Scene 3 · 啟蒙（理學堂大書院） ================= */
+
+    #s3 {
+      position: fixed; inset: 0; z-index: 1;
+      opacity: 0; visibility: hidden; pointer-events: none;
+      transition: opacity 1.0s ease, visibility 0s linear 1.0s;
+      touch-action: pan-y; user-select: none;
+    }
+    #s3.is-in {
+      opacity: 1; visibility: visible; pointer-events: auto;
+      transition: opacity 1.0s ease, visibility 0s;
+    }
+
+    /* ---------------- the morning beams ----------------
+       Three shafts coming in over the right shoulder, which is where the
+       light in the painting comes from.
+
+       All three live in one element. The first build gave each its own
+       rotated box and blended the stack in screen mode, and that cost 33ms
+       a frame on a machine with no GPU: 100ms against 67ms for the same
+       painting in the chapter before it. Half of that was the blend mode
+       and the rest was three large half transparent layers for the
+       compositor to carry. One element with one angled gradient paints the
+       same three shafts in a single pass.
+
+       The bands run perpendicular to the gradient's own axis, so 113deg
+       leans them 23 degrees off vertical, down towards the left. The
+       radial mask is what makes them read as shafts rather than stripes:
+       it holds them at full weight up by the sun and lets them die out
+       across the grass. */
+    .s3-rays {
+      position: absolute; inset: 0;
+      pointer-events: none;
+      /* The three shafts and their falloff, drawn once into an image
+         rather than built out of a gradient and a mask every frame.
+
+         Three separately rotated and screen blended boxes cost 33ms a
+         frame on a machine with no GPU; one gradient with a mask still
+         cost 16.7. A picture costs the compositor a texture and nothing
+         else, and an opacity animation over it never touches paint at
+         all, which is what keeps the breathing free on a phone. */
+      /* The texture is baked into index.html as a data URI; the file itself
+         is s3/rays.webp. */
+      background-image: url('s3/rays.webp');
+      background-size: cover;
+      background-position: 50% 0;
+      background-repeat: no-repeat;
+      opacity: .08;
+      will-change: opacity;
+      animation: s3Ray 6s ease-in-out infinite;
+    }
+
+    @keyframes s3Ray {
+      0%, 100% { opacity: .08; }
+      50%      { opacity: .18; }
+    }
+
+    #enlightenment-fx-canvas {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      display: block;
+      pointer-events: none;
+    }
+
+    /* ---------------- the line that invites the first touch ---------------- */
+    #s3-hint {
+      position: fixed; left: 50%; transform: translateX(-50%);
+      top: calc(var(--nav-h) + env(safe-area-inset-top) + 18px);
+      margin: 0; padding: 9px 18px;
+      z-index: 6; pointer-events: none;
+      font-family: 'Huninn', 'Noto Sans TC', sans-serif;
+      font-size: 14px; letter-spacing: .04em;
+      color: rgba(255, 248, 231, .92);
+      background: rgba(28, 20, 10, .34);
+      border: 1px solid rgba(255, 236, 184, .22);
+      -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
+      opacity: 0; transition: opacity .7s ease;
+    }
+    #s3-hint.is-in { opacity: 1; }
+
+    @media (max-width: 760px) {
+      #s3-hint { font-size: 12.5px; padding: 8px 14px; }
+    }
+
+    /* Someone who asked not to be shown movement gets the light, held
+       still. The canvas never starts, so there is nothing else to stop. */
+    @media (prefers-reduced-motion: reduce) {
+      .s3-rays { animation: none; opacity: .13; }
+    }
+
