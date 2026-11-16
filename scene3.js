@@ -1,31 +1,60 @@
   /* ====================== Scene 3 · 啟蒙（理學堂大書院） ======================
-     The chapter is the painting and the light on it. One canvas carries
-     everything that moves: fireflies breathing over the grass, flecks of
-     gold leaf catching the morning, and now and then a thread of dust
-     drawn across the sky. A finger leaves light where it passes, and a
-     touch on the grass puts the whole patch up at once.
+     Nothing floats over this painting any more. What moves is the painting:
+     the mask carries a blue channel saying how much each pixel belongs to
+     something a breeze can shift, and the shader that draws the picture
+     reads it. Fronds and leaf edges travel a few pixels; brick, stone, the
+     lawn and the benches are left exactly where they were painted.
 
-     The canvas is deaf to the pointer, so a press reaches it only after it
-     has passed every button on the page. What turns the view is #s3
-     underneath; what the light listens for is the same gesture, read from
-     the window and thrown away when it lands on a control. */
+     The canvas above is empty almost all of the time. It wakes only for a
+     press: the breeze gets up, a few leaves come off the trees, and a band
+     of light crosses the grass. When the last of that has gone it clears
+     itself and stops, so an untouched chapter costs one quad and no layer
+     at all. */
   (function () {
     'use strict';
 
     const PANO3  = 's3/pano3.webp';   /* baked into index.html as a data URI */
     const MASK3  = 's3/mask3.png';    /* baked into index.html as a data URI */
     const PANO_A = 2576 / 1274;
+    const IW = 2576, IH = 1274;
 
-    /* No water in this chapter, so the river shader is given a black mask
-       and a flat look: it draws the painting and leaves it alone. Every
-       value is set, not only the ones that differ, because the chapter
-       before this one leaves the renderer wherever it had it. */
+    /* No open water here, so every water term is off. The mask carries the
+       wind in its blue channel and the sky in its red, which in a chapter
+       with a river would be the river instead.
+
+       Every value below is set, not only the ones that differ from the
+       chapter before. The renderer is left wherever that chapter put it,
+       so a value left unsaid is inherited rather than defaulted, and that
+       has already cost this chapter its wind once. */
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const WIND_CALM = 0.01050;        /* how far a frond tip travels, in uv */
+    const WIND_GUST = 0.00900;        /* and what a press adds on top       */
+
+    /* What the sky does with that red channel.
+
+       CDRIFT is how far a cloud travels, in uv: 0.0369 is ninety five
+       image pixels, and the mask is built around that exact number so a
+       cloud can never be carried into a roof. The clouds in this painting
+       are cream against blue at almost the same brightness, which is why
+       a first pass that measured the sky in brightness alone concluded
+       there was nothing there to move. There is.
+
+       CLOUD is the light they cast, a few per cent up and down. Travelling
+       alone is honest but quiet, because the painted edges are soft;
+       shading alone slides nothing. Together they read.
+
+       Both are scaled by the renderer's own amount, which is what carries
+       the reduced-motion setting, so neither needs to ask about it here. */
+    const CDRIFT = 0.0369;
+    const CLOUD  = 0.062;
     const LOOK = { warm: 0.0, disp: 0.0, swell: 0.0, glint: 0.0,
-                   gf: 5.00, gsharp: 2.00, heel: 0.0 };
+                   gf: 5.00, gsharp: 2.00, heel: 0.0,
+                   wind: WIND_CALM, cloud: CLOUD, cdrift: CDRIFT };
 
     const T3 = {
-      zh: { hint: '拖曳環顧書院　輕觸草地' },
-      en: { hint: 'Drag to look around. Touch the grass.' },
+      zh: { hint: '拖曳環顧書院　輕觸草地或樹叢，等一陣風' },
+      en: { hint: 'Drag to look around. Touch the grass and wait for the wind.' },
     };
 
     const s3     = document.getElementById('s3');
@@ -34,10 +63,7 @@
     if (!s3 || !cv) return;
 
     const ctx  = cv.getContext('2d', { alpha: true });
-    const TAU  = Math.PI * 2;
     const rand = (a, b) => a + Math.random() * (b - a);
-    const pick = a => a[(Math.random() * a.length) | 0];
-    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     let lang3 = (document.documentElement.lang || 'zh').indexOf('en') === 0 ? 'en' : 'zh';
     document.addEventListener('langchange', e => {
@@ -45,11 +71,8 @@
       if (hintEl.classList.contains('is-in')) hintEl.textContent = T3[lang3].hint;
     });
 
-    /* ---------------- turning the view ----------------
-       The same model chapter two uses: one uniform slides the painting
-       sideways, bounded so the edge of the canvas never comes into frame. */
+    /* ---------------- turning the view ---------------- */
     let pan = 0;
-
     function panRange() {
       const s = (innerWidth / innerHeight) / PANO_A;
       return s >= 1 ? 0 : Math.max(0, 0.5 - s / 2);
@@ -58,368 +81,298 @@
       const m = panRange();
       pan = Math.max(-m, Math.min(m, v));
       if (window.__set) window.__set('pan', pan);
+      mapView();
     }
 
-    /* ---------------- the canvas ---------------- */
-    let W = 0, H = 0, dpr = 1;
+    /* ---------------- the painting's pixels, on this screen ----------------
+       The shader fits the painting the short way round and slides it by
+       `pan`, which comes to this: image point (0.5 - pan, 0.5) sits in the
+       middle of the screen and one image pixel is k screen pixels. */
+    let k = 1, ox = 0, oy = 0, W = 0, H = 0, dpr = 1;
+    function mapView() {
+      k  = Math.max(innerWidth / IW, innerHeight / IH);
+      ox = innerWidth  / 2 - (0.5 - pan) * IW * k;
+      oy = innerHeight / 2 - 0.5 * IH * k;
+    }
+    const SX = px => ox + px * k;
+    const SY = py => oy + py * k;
+
     function sizeCanvas() {
       dpr = Math.min(devicePixelRatio || 1, 2);
       W = innerWidth; H = innerHeight;
       cv.width  = Math.max(1, Math.round(W * dpr));
       cv.height = Math.max(1, Math.round(H * dpr));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      mapView();
     }
 
-    /* ---------------- what the light is made of ----------------
-       Every shape is drawn once into a little canvas of its own and
-       stamped from there. Building a radial gradient per particle per
-       frame is what makes a layer like this expensive; a drawImage of a
-       cached sprite is close to free, and it is the only reason forty
-       lights and a burst on top of them cost nothing to speak of. */
-    function bokehSprite(rgb) {
+    /* ---------------- two shapes, drawn once ---------------- */
+    /* A leaf, sunlit from behind rather than cut out in silhouette: this
+       layer is blended to add light and can never take any away, so a dark
+       shape would simply not appear. */
+    function leafSprite() {
       const c = document.createElement('canvas');
-      c.width = c.height = 128;
+      c.width = c.height = 64;
       const g = c.getContext('2d');
-      const rg = g.createRadialGradient(64, 64, 0, 64, 64, 64);
-      /* A disc with a soft rim, not a point with a halo. Out of focus
-         light is a flat round plate: the first build fell away from the
-         centre immediately, which over a sunlit painting left a pinprick
-         that read as a speck of dust rather than a firefly. The body is
-         held almost flat to half the radius and only then let go. */
-      rg.addColorStop(0.00, 'rgba(' + rgb + ',1)');
-      rg.addColorStop(0.34, 'rgba(' + rgb + ',0.80)');
-      rg.addColorStop(0.52, 'rgba(' + rgb + ',0.62)');
-      rg.addColorStop(0.74, 'rgba(' + rgb + ',0.24)');
-      rg.addColorStop(1.00, 'rgba(' + rgb + ',0)');
-      g.fillStyle = rg;
-      g.fillRect(0, 0, 128, 128);
+      const lg = g.createLinearGradient(32, 6, 32, 58);
+      /* A real green, not a pale one. This layer may only add light, so
+         a leaf that is nearly white adds nearly white and reads as a
+         speck of dust; a saturated green adds green and reads as a
+         leaf. */
+      lg.addColorStop(0.00, 'rgba(178,214,108,0.95)');
+      lg.addColorStop(0.42, 'rgba(124,170,70,0.90)');
+      lg.addColorStop(1.00, 'rgba(78,118,46,0.72)');
+      g.fillStyle = lg;
+      g.beginPath();
+      g.moveTo(32, 5);
+      g.bezierCurveTo(51, 20, 51, 44, 32, 59);
+      g.bezierCurveTo(13, 44, 13, 20, 32, 5);
+      g.fill();
+      g.strokeStyle = 'rgba(244,252,206,0.42)';
+      g.lineWidth = 1.4;
+      g.beginPath(); g.moveTo(32, 9); g.lineTo(32, 55); g.stroke();
       return c;
     }
 
-    /* A four pointed sparkle with its sides drawn in towards the middle,
-       which is what makes it read as struck foil rather than the asterisk
-       a star of straight spokes gives you. */
-    function foilSprite(rgb) {
+    /* The band of light that crosses the grass when the cloud cover opens.
+       Built as a wide horizontal gradient and then feathered top and
+       bottom, so it has no edge anywhere. */
+    function sunSprite() {
       const c = document.createElement('canvas');
-      c.width = c.height = 128;
+      c.width = 256; c.height = 64;
       const g = c.getContext('2d');
-      const rg = g.createRadialGradient(64, 64, 0, 64, 64, 40);
-      rg.addColorStop(0.00, 'rgba(' + rgb + ',0.85)');
-      rg.addColorStop(1.00, 'rgba(' + rgb + ',0)');
-      g.fillStyle = rg;
-      g.fillRect(0, 0, 128, 128);
-
-      const R = 58, w = 5.5;
-      g.translate(64, 64);
-      g.fillStyle = 'rgba(' + rgb + ',1)';
-      g.beginPath();
-      g.moveTo(0, -R);
-      g.quadraticCurveTo(w, -w, R, 0);
-      g.quadraticCurveTo(w, w, 0, R);
-      g.quadraticCurveTo(-w, w, -R, 0);
-      g.quadraticCurveTo(-w, -w, 0, -R);
-      g.fill();
-      /* A shorter pair across the diagonals, so it glitters rather than
-         sitting there as a clean cross. */
-      g.rotate(Math.PI / 4);
-      g.globalAlpha = 0.5;
-      g.beginPath();
-      g.moveTo(0, -R * 0.42);
-      g.quadraticCurveTo(w * 0.5, -w * 0.5, R * 0.42, 0);
-      g.quadraticCurveTo(w * 0.5, w * 0.5, 0, R * 0.42);
-      g.quadraticCurveTo(-w * 0.5, w * 0.5, -R * 0.42, 0);
-      g.quadraticCurveTo(-w * 0.5, -w * 0.5, 0, -R * 0.42);
-      g.fill();
+      const lg = g.createLinearGradient(0, 0, 256, 0);
+      lg.addColorStop(0.00, 'rgba(255,247,214,0)');
+      lg.addColorStop(0.34, 'rgba(255,247,214,0.72)');
+      lg.addColorStop(0.50, 'rgba(255,250,228,1)');
+      lg.addColorStop(0.66, 'rgba(255,247,214,0.72)');
+      lg.addColorStop(1.00, 'rgba(255,247,214,0)');
+      g.fillStyle = lg; g.fillRect(0, 0, 256, 64);
+      const vg = g.createLinearGradient(0, 0, 0, 64);
+      vg.addColorStop(0.00, 'rgba(0,0,0,0)');
+      vg.addColorStop(0.30, 'rgba(0,0,0,1)');
+      vg.addColorStop(0.70, 'rgba(0,0,0,1)');
+      vg.addColorStop(1.00, 'rgba(0,0,0,0)');
+      g.globalCompositeOperation = 'destination-in';
+      g.fillStyle = vg; g.fillRect(0, 0, 256, 64);
       return c;
     }
 
-    const AMBER = bokehSprite('255,209,102');   /* #FFD166 */
-    const GOLD  = bokehSprite('244,162,97');    /* #F4A261 */
-    const CREAM = bokehSprite('255,248,231');   /* #FFF8E7 */
-    const BOKEH = [AMBER, GOLD, CREAM, AMBER, CREAM];   /* amber and cream lead */
-    const FOIL  = foilSprite('255,229,153');    /* #FFE599 */
+    const LEAF = leafSprite();
+    const SUN  = sunSprite();
 
-    /* ---------------- the resident light ----------------
-       Thirty six of them, which is enough that the air is never empty and
-       few enough that nothing has to be thinned when a burst lands on top. */
-    /* Forty four, inside the band the brief asks for. Twenty was too thin
-       to read across a screen this wide: the air looked empty between
-       them. */
-    const BOKEH_N = 26, FOIL_N = 18;
-    const lights = [];
+    /* Where leaves come from. The lower canopy rather than the crowns:
+       higher up they would spend their first seconds against a sky that is
+       nearly white, and light added to nearly white is nothing at all. */
+    /* Below the skyline on purpose. Against pale sky an added green is
+       very nearly white, so a leaf up there is a ghost; coming off the
+       canopy it has dark foliage behind it the whole way down. */
+    const TREES = [
+      { x0: 40,   y0: 430, x1: 620,  y1: 700, dir:  1 },   /* left, blowing right */
+      { x0: 1850, y0: 420, x1: 2550, y1: 700, dir: -1 },   /* right, blowing left */
+    ];
+    const GRASS_TOP = 700, GRASS_BOT = 1180;
 
-    function castLight(p, kind, anywhere) {
-      p.kind = kind;
-      p.x = rand(-0.04, 1.04) * W;
-      /* Fireflies belong over the grass and the bushes, and that is also
-         the only place they can be seen: added light does nothing to a
-         sky that is already near white, and everything to foliage in
-         shade. The sky gets the stardust instead. Foil is scattered
-         wider, since it is the page's gilding rather than an insect. */
-      const top = kind === 'bokeh' ? 0.40 : 0.06;
-      p.y = anywhere ? rand(top, 1.05) * H : rand(1.02, 1.3) * H;
-      if (kind === 'bokeh') {
-        p.r    = rand(2.5, 10);
-        p.img  = pick(BOKEH);
-        /* Big ones are soft and dim, small ones are tight and bright,
-           which is how a lens actually renders light it cannot resolve
-           and what stops the large discs from blowing out to white when
-           two of them cross. */
-        p.a    = Math.max(0.46, Math.min(1, 1.16 - p.r * 0.054)) * rand(0.88, 1.08);
-        p.rise = rand(5, 17);
-        p.bw   = rand(0.30, 0.95);            /* its own breath */
-      } else {
-        /* Most of the foil is dust; a few are struck stars. */
-        p.star = Math.random() < 0.42;
-        p.r    = p.star ? rand(3.0, 7.5) : rand(0.8, 1.9);
-        p.img  = FOIL;
-        p.a    = p.star ? rand(0.62, 1) : rand(0.45, 0.8);
-        p.rise = rand(4, 14);
-        p.bw   = rand(0.8, 2.1);              /* foil twinkles quicker */
-        p.rot  = rand(0, TAU);
-        p.spin = rand(-0.5, 0.5);
-      }
-      p.ph   = rand(0, TAU);
-      p.amp  = rand(6, 26);                   /* how far the air carries it */
-      p.sw   = rand(0.14, 0.42);
-      p.drift = rand(-7, 7);
+    /* =============================================================
+       the breeze
+       ============================================================= */
+    let gust = 0;                     /* 0 calm, 1 the moment of the press */
+
+    function pushWind() {
+      if (!window.__set) return;
+      /* Up quickly and down slowly, the way a gust actually arrives. */
+      window.__set('wind', WIND_CALM + WIND_GUST * gust);
     }
 
-    function seedLights(anywhere) {
-      lights.length = 0;
-      for (let i = 0; i < BOKEH_N; i++) { const p = {}; castLight(p, 'bokeh', anywhere); lights.push(p); }
-      for (let i = 0; i < FOIL_N;  i++) { const p = {}; castLight(p, 'foil',  anywhere); lights.push(p); }
+    /* =============================================================
+       what a press puts there
+       ============================================================= */
+    const leaves = [];
+    let sweep = null;
+
+    /* What part of the painting is on the screen right now. A leaf that
+       comes off a tree forty degrees round the panorama is a leaf nobody
+       sees, and the first build dropped most of them there. */
+    function visibleX() {
+      return [(-ox) / k, (innerWidth - ox) / k];
     }
 
-    function drawLights(dt, t) {
-      for (let i = 0; i < lights.length; i++) {
-        const p = lights[i];
-        p.y -= p.rise * dt;
-        p.x += p.drift * dt;
-        if (p.y < -0.12 * H) { castLight(p, p.kind, false); continue; }
-
-        const x = p.x + Math.sin(t * p.sw + p.ph) * p.amp;
-        const s = 0.5 + 0.5 * Math.sin(t * p.bw + p.ph);
-
-        if (p.kind === 'bokeh') {
-          ctx.globalAlpha = p.a * (0.5 + 0.5 * s);
-          const R = p.r * 1.9;
-          ctx.drawImage(p.img, x - R, p.y - R, R * 2, R * 2);
-        } else {
-          /* Squared, so the foil sits dark most of the time and flashes,
-             the way a struck surface catches the light only on the turn. */
-          ctx.globalAlpha = p.a * (0.1 + 0.9 * s * s);
-          p.rot += p.spin * dt;
-          const R = p.r * (p.star ? 2.4 : 3.4);
-          ctx.save();
-          ctx.translate(x, p.y);
-          ctx.rotate(p.rot);
-          ctx.drawImage(p.img, -R, -R, R * 2, R * 2);
-          ctx.restore();
-        }
-      }
-    }
-
-    /* ---------------- a thread of dust across the sky ----------------
-       Once every several seconds, high up. It is a head with a tail of its
-       own recent positions, so the arc draws itself and goes out behind. */
-    let arc = null, nextArc = rand(2.5, 5);
-
-    function castArc() {
-      const leftward = Math.random() < 0.5;
-      /* Down nearer the treetops rather than up in the open sky. Added
-         light does almost nothing to a pale sky and a great deal against
-         foliage, so the thread is drawn where it can actually be seen. */
-      const y0 = rand(0.20, 0.50) * H;
-      arc = {
-        x: leftward ? rand(0.75, 1.05) * W : rand(-0.05, 0.25) * W,
-        y: y0,
-        vx: (leftward ? -1 : 1) * rand(0.17, 0.30) * W,
-        vy: rand(-0.02, 0.05) * H,
-        ay: rand(0.03, 0.10) * H,            /* a gentle sag, so it arcs */
-        t: 0, life: rand(2.2, 3.4),
-        trail: [],
-      };
-    }
-
-    function drawArc(dt) {
-      if (!arc) {
-        nextArc -= dt;
-        if (nextArc <= 0) { castArc(); nextArc = rand(4.5, 9); }
-        return;
-      }
-      arc.t += dt;
-      arc.vy += arc.ay * dt;
-      arc.x  += arc.vx * dt;
-      arc.y  += arc.vy * dt;
-      arc.trail.push(arc.x, arc.y);
-      if (arc.trail.length > 76) arc.trail.splice(0, 2);
-
-      const u = arc.t / arc.life;
-      /* Comes up, holds, goes out. */
-      const fade = u < 0.18 ? u / 0.18 : u > 0.62 ? Math.max(0, (1 - u) / 0.38) : 1;
-
-      const n = arc.trail.length / 2;
+    function dropLeaves(nearX) {
+      /* From whichever side of the courtyard the press was nearer to, so
+         the leaves come off the trees you were just looking at, and only
+         from the part of that stand you can actually see. */
+      const tr = TREES[nearX > IW / 2 ? 1 : 0];
+      const [vx0, vx1] = visibleX();
+      const x0 = Math.max(tr.x0, vx0 + 30), x1 = Math.min(tr.x1, vx1 - 30);
+      const wide = x1 - x0 > 60;
+      const n = 3 + ((Math.random() * 3) | 0);          /* 3 to 5 */
       for (let i = 0; i < n; i++) {
-        const k = i / n;                      /* 0 oldest, 1 newest */
-        const R = 1.6 + 6.0 * k;
-        ctx.globalAlpha = fade * 0.9 * k * k;
-        ctx.drawImage(CREAM, arc.trail[i * 2] - R, arc.trail[i * 2 + 1] - R, R * 2, R * 2);
-      }
-      ctx.globalAlpha = fade;
-      ctx.drawImage(CREAM, arc.x - 13, arc.y - 13, 26, 26);
-      ctx.drawImage(AMBER, arc.x - 8, arc.y - 8, 16, 16);
-
-      if (arc.t >= arc.life || arc.x < -0.15 * W || arc.x > 1.15 * W) arc = null;
-    }
-
-    /* ---------------- what a finger leaves behind ----------------
-       Light falls where the pointer goes and lifts away. Kept sparse and
-       short lived: a trail that lingers stops reading as dust and starts
-       reading as a brush. */
-    const TRAIL_MAX = 30;
-    const trail = [];
-
-    function dropDust(x, y, vx) {
-      for (let i = 0, n = 2 + (Math.random() < 0.5 ? 1 : 0); i < n; i++) {
-        if (trail.length >= TRAIL_MAX) return;
-        const star = Math.random() < 0.3;
-        trail.push({
-          x: x + rand(-7, 7), y: y + rand(-7, 7),
-          vx: vx * rand(0.05, 0.22) + rand(-11, 11),
-          vy: rand(-34, -9),
-          r: star ? rand(2.8, 5.4) : rand(1.8, 4.6),
-          star: star, img: star ? FOIL : pick(BOKEH),
-          rot: rand(0, TAU), spin: rand(-2.2, 2.2),
-          t: 0, life: rand(0.8, 1.5), a: rand(0.68, 1),
+        leaves.push({
+          x: wide ? rand(x0, x1) : Math.max(vx0 + 40, Math.min(vx1 - 40, nearX + rand(-260, 260))),
+          y: rand(tr.y0, tr.y1),
+          vx: tr.dir * rand(26, 58), vy: rand(52, 84),
+          r: rand(8, 14),
+          spin: rand(1.2, 2.8) * (Math.random() < 0.5 ? -1 : 1),
+          turn: rand(0, Math.PI * 2), tw: rand(1.5, 3.0),
+          rot: rand(0, Math.PI * 2),
+          ph: rand(0, Math.PI * 2), sw: rand(0.5, 1.1), amp: rand(16, 48),
+          t: 0, life: rand(6.5, 10), a: rand(0.55, 0.9),
+          delay: i * rand(0.12, 0.55),
         });
       }
     }
 
-    /* ---------------- a touch on the grass ----------------
-       A ring of warm light opening outwards, and the fireflies that were
-       sitting in that patch going up all at once. */
-    const BURST_MAX = 40, RING_MAX = 3;
-    const burst = [], rings = [];
-
-    function startle(px, py) {
-      if (rings.length < RING_MAX) rings.push({ x: px, y: py, t: 0, life: 0.95 });
-
-      const n = 12 + ((Math.random() * 7) | 0);      /* 12 to 18 */
-      for (let i = 0; i < n; i++) {
-        if (burst.length >= BURST_MAX) break;
-        const a = rand(0, TAU);
-        /* Thrown out, then the air takes it, and what is left is the
-           climb. */
-        const sp = rand(90, 320);
-        const star = Math.random() < 0.35;
-        burst.push({
-          x: px + rand(-5, 5), y: py + rand(-5, 5),
-          vx: Math.cos(a) * sp,
-          vy: Math.sin(a) * sp * 0.78 - rand(20, 70),
-          r: star ? rand(2.6, 6.2) : rand(2, 8),
-          star: star, img: star ? FOIL : pick(BOKEH),
-          rot: rand(0, TAU), spin: rand(-3.4, 3.4),
-          t: 0, life: rand(1.5, 2.6), a: rand(0.7, 1),
-          bw: rand(3, 7), ph: rand(0, TAU),
-        });
-      }
-    }
-
-    function drawFlecks(list, dt, t) {
-      for (let i = list.length - 1; i >= 0; i--) {
-        const p = list[i];
+    function drawLeaves(dt, t) {
+      for (let i = leaves.length - 1; i >= 0; i--) {
+        const p = leaves[i];
+        if (p.delay > 0) { p.delay -= dt; continue; }
         p.t += dt;
-        if (p.t >= p.life) { list.splice(i, 1); continue; }
-        /* Drag, then lift. The first build halved the speed every tenth
-           of a second, which stopped the whole burst dead on the spot it
-           was thrown from and left a smudge rather than a scatter. At
-           this rate the speed halves in about four fifths of a second, so
-           the throw carries and then the climb takes over. */
-        const k = Math.pow(0.42, dt);
-        p.vx *= k; p.vy *= k;
-        p.vy -= 30 * dt;
-        p.x += p.vx * dt; p.y += p.vy * dt;
-        p.rot += p.spin * dt;
+        p.turn += p.tw * dt;
+        p.rot += p.spin * dt * 0.22;
+        /* Carried along while the gust lasts, then only falling. */
+        p.x += p.vx * (0.45 + 0.55 * gust) * dt;
+        p.y += p.vy * dt;
+        if (p.t >= p.life || p.y > GRASS_BOT + 60) { leaves.splice(i, 1); continue; }
 
         const u = p.t / p.life;
-        const fade = u < 0.10 ? u / 0.10 : Math.max(0, (1 - u) / 0.9);
-        const tw = p.bw ? (0.55 + 0.45 * Math.sin(t * p.bw + p.ph)) : 1;
-        ctx.globalAlpha = p.a * fade * tw;
-        const R = p.r * (p.star ? 2.4 : 2.6);
-        if (p.star) {
-          ctx.save();
-          ctx.translate(p.x, p.y);
-          ctx.rotate(p.rot);
-          ctx.drawImage(p.img, -R, -R, R * 2, R * 2);
-          ctx.restore();
-        } else {
-          ctx.drawImage(p.img, p.x - R, p.y - R, R * 2, R * 2);
-        }
+        const fade = u < 0.07 ? u / 0.07 : u > 0.78 ? Math.max(0, (1 - u) / 0.22) : 1;
+        /* The width follows the cosine of its own turn, so each leaf goes
+           edge on and flat again as it falls instead of sliding down the
+           screen like a sticker. */
+        const flat = Math.abs(Math.cos(p.turn));
+        ctx.globalAlpha = p.a * fade * (0.34 + 0.66 * flat);
+        const hh = p.r * k * 1.5, ww = p.r * k * 0.72 * (0.22 + 0.78 * flat);
+        ctx.save();
+        ctx.translate(SX(p.x + Math.sin(t * p.sw + p.ph) * p.amp), SY(p.y));
+        ctx.rotate(p.rot + Math.sin(p.turn) * 0.30);
+        ctx.drawImage(LEAF, -ww, -hh, ww * 2, hh * 2);
+        ctx.restore();
       }
     }
 
-    function drawRings(dt) {
-      for (let i = rings.length - 1; i >= 0; i--) {
-        const g = rings[i];
-        g.t += dt;
-        if (g.t >= g.life) { rings.splice(i, 1); continue; }
-        const u = g.t / g.life;
-        /* Fast out of the gate and easing to a stop, which is how a ring
-           on water opens. */
-        const e = 1 - Math.pow(1 - u, 3);
-        const R = 6 + e * Math.min(135, Math.max(W, H) * 0.12);
-        ctx.globalAlpha = (1 - u) * (1 - u) * 0.72;
-        ctx.strokeStyle = 'rgba(255,221,150,1)';
-        ctx.lineWidth = Math.max(0.7, 4.2 * (1 - u));
-        ctx.beginPath();
-        ctx.arc(g.x, g.y, R, 0, TAU);
-        ctx.stroke();
-        /* A second, fainter ring just behind it, so the water has depth. */
-        ctx.globalAlpha = (1 - u) * (1 - u) * 0.3;
-        ctx.lineWidth = Math.max(0.5, 1.8 * (1 - u));
-        ctx.beginPath();
-        ctx.arc(g.x, g.y, R * 0.72, 0, TAU);
-        ctx.stroke();
-      }
+    function castSweep(fromX) {
+      sweep = { t: 0, life: 3.6, dir: fromX > IW / 2 ? -1 : 1 };
     }
 
-    /* ---------------- the loop ---------------- */
+    function drawSweep(dt) {
+      if (!sweep) return;
+      sweep.t += dt;
+      if (sweep.t >= sweep.life) { sweep = null; return; }
+      const u = sweep.t / sweep.life;
+      /* In, across, out. The band is wider than the screen, so what you
+         see is the light changing rather than an object going past. */
+      const fade = u < 0.22 ? u / 0.22 : u > 0.62 ? Math.max(0, (1 - u) / 0.38) : 1;
+      const travel = -0.35 + u * 1.7;
+      const cx = sweep.dir > 0 ? travel * IW : (1 - travel) * IW;
+      const w = IW * 0.62, h = (GRASS_BOT - GRASS_TOP) * 1.15;
+      const cy = (GRASS_TOP + GRASS_BOT) / 2;
+      ctx.globalAlpha = 0.13 * fade;
+      ctx.drawImage(SUN, SX(cx - w / 2), SY(cy - h / 2), w * k, h * k);
+    }
+
+    /* =============================================================
+       one soft rustle, and only if the sound is on
+       ============================================================= */
+    let noiseBuf = null;
+    function ac() {
+      /* The mute button in the corner owns these two. If the person has
+         never switched the sound on, actx does not exist yet and nothing
+         here makes one: a chapter is not allowed to start the audio. */
+      if (typeof audioOn === 'undefined' || !audioOn) return null;
+      if (typeof actx === 'undefined' || !actx || actx.state !== 'running') return null;
+      return actx;
+    }
+
+    function rustle() {
+      const a = ac();
+      if (!a) return;
+      if (!noiseBuf) {
+        noiseBuf = a.createBuffer(1, a.sampleRate * 2, a.sampleRate);
+        const d = noiseBuf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      }
+      const now = a.currentTime;
+      const src = a.createBufferSource();
+      src.buffer = noiseBuf;
+      src.loopStart = Math.random() * 1.0; src.loop = true;
+
+      /* Leaves are a band of noise around two kilohertz that opens and
+         closes. Sweeping the filter is what turns a hiss into a rustle. */
+      const bp = a.createBiquadFilter();
+      bp.type = 'bandpass'; bp.Q.value = 0.9;
+      bp.frequency.setValueAtTime(900, now);
+      bp.frequency.linearRampToValueAtTime(2600, now + 0.55);
+      bp.frequency.linearRampToValueAtTime(1200, now + 1.6);
+
+      const g = a.createGain();
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.exponentialRampToValueAtTime(0.030, now + 0.42);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 1.7);
+
+      src.connect(bp).connect(g).connect(a.destination);
+      src.start(now); src.stop(now + 1.8);
+    }
+
+    /* =============================================================
+       the loop, which only runs when there is something to run for
+       ============================================================= */
     let running = false, raf = 0, last = 0, clock = 0;
 
     function frame(now) {
       if (!running) return;
-      raf = requestAnimationFrame(frame);
       const dt = Math.min(0.05, (now - last) / 1000 || 0);
-      last = now;
-      clock += dt;
+      last = now; clock += dt;
+
+      /* The gust decays towards calm; the press is what puts it up. */
+      gust = Math.max(0, gust - dt / 4.2);
+      pushWind();
 
       ctx.clearRect(0, 0, W, H);
-      /* Added to the painting rather than laid over it, so the light sits
-         in the grass and on the brick instead of greying them. */
       ctx.globalCompositeOperation = 'lighter';
-
-      drawLights(dt, clock);
-      drawArc(dt);
-      drawFlecks(trail, dt, clock);
-      drawFlecks(burst, dt, clock);
-      drawRings(dt);
-
+      drawSweep(dt);
+      drawLeaves(dt, clock);
       ctx.globalCompositeOperation = 'source-over';
       ctx.globalAlpha = 1;
-    }
 
-    function runFX(on) {
-      if (on === running) return;
-      running = on;
-      if (on) {
-        last = performance.now();
+      if (leaves.length || sweep || gust > 0.002) {
         raf = requestAnimationFrame(frame);
       } else {
-        cancelAnimationFrame(raf);
+        /* Nothing left to draw. Clear, take the layer off the page and
+           stop: an untouched chapter should cost nothing at all. */
+        running = false;
         ctx.clearRect(0, 0, W, H);
-        trail.length = 0; burst.length = 0; rings.length = 0; arc = null;
+        cv.classList.remove('is-on');
+        if (window.__set) window.__set('wind', WIND_CALM);
       }
+    }
+
+    function wake() {
+      if (running) return;
+      running = true;
+      cv.classList.add('is-on');
+      last = performance.now();
+      raf = requestAnimationFrame(frame);
+    }
+
+    function stopFX() {
+      running = false;
+      cancelAnimationFrame(raf);
+      ctx.clearRect(0, 0, W, H);
+      cv.classList.remove('is-on');
+      leaves.length = 0; sweep = null; gust = 0;
+    }
+
+    /* A press on the grass or the trees. One gust, a few leaves, and the
+       light crossing the lawn behind them. */
+    function breeze(sx, sy) {
+      if (reduce) return;
+      const ix = (sx - ox) / k;
+      gust = 1;
+      pushWind();
+      dropLeaves(ix);
+      castSweep(ix);
+      rustle();
+      wake();
     }
 
     /* ---------------- what counts as touching the grass ----------------
@@ -436,20 +389,6 @@
     }
 
     let active = false;
-
-    /* The trail follows the pointer whether or not anything is held down,
-       read from the window so it keeps up across the whole page, and
-       dropped the moment it crosses a control. */
-    let lastDust = 0, lastMX = 0;
-    addEventListener('pointermove', e => {
-      if (!active || reduce || !running) return;
-      if (onChrome(e)) { lastMX = e.clientX; return; }
-      const now = performance.now();
-      if (now - lastDust < 16) return;
-      lastDust = now;
-      dropDust(e.clientX, e.clientY, e.clientX - lastMX);
-      lastMX = e.clientX;
-    }, { passive: true });
 
     /* A drag ends with a click of its own, and that click is not a touch
        on the grass. Settling this on pointerup with a distance guard is
@@ -476,20 +415,17 @@
       const up = e => {
         if (e.pointerId !== id) return;
         id = null;
-        if (moved <= 8 && !reduce && !onChrome(e)) {
-          startle(e.clientX, e.clientY);
-          hideHint();
-        }
+        if (moved <= 8 && !onChrome(e)) { breeze(e.clientX, e.clientY); hideHint(); }
       };
       s3.addEventListener('pointerup', up);
       s3.addEventListener('pointercancel', () => { id = null; });
     })();
 
     /* Assistive software can raise a click that no pointer produced. That
-       one is a real press and still deserves its fireflies. */
+       one is a real press and still deserves its gust. */
     s3.addEventListener('click', e => {
-      if (!active || reduce || e.detail !== 0 || onChrome(e)) return;
-      startle(e.clientX || W / 2, e.clientY || H / 2);
+      if (!active || e.detail !== 0 || onChrome(e)) return;
+      breeze(e.clientX || W / 2, e.clientY || H / 2);
     });
 
     /* ---------------- the hint ---------------- */
@@ -498,7 +434,7 @@
       hintEl.textContent = T3[lang3].hint;
       hintEl.classList.add('is-in');
       clearTimeout(hintTimer);
-      hintTimer = setTimeout(hideHint, 6000);
+      hintTimer = setTimeout(hideHint, 7000);
     }
     function hideHint() {
       clearTimeout(hintTimer);
@@ -509,13 +445,12 @@
     addEventListener('resize', () => {
       if (!active) return;
       sizeCanvas();
-      seedLights(true);
       setPan(pan);
     });
 
     document.addEventListener('visibilitychange', () => {
       if (!active) return;
-      runFX(document.visibilityState === 'visible' && !reduce);
+      if (document.visibilityState !== 'visible') stopFX();
     });
 
     document.addEventListener('scenechange', e => {
@@ -524,18 +459,27 @@
       active = on;
       if (on) {
         if (window.__setScene) window.__setScene(PANO3, MASK3, PANO_A);
-        if (window.__set) for (const k in LOOK) window.__set(k, LOOK[k]);
+        if (window.__set) for (const key in LOOK) window.__set(key, LOOK[key]);
         setPan(0);
         sizeCanvas();
-        seedLights(true);
-        arc = null; nextArc = rand(2.5, 5);
         s3.classList.add('is-in');
         showHint();
-        runFX(!reduce);
+        /* A gust already going when the chapter opens, settling over the
+           next few seconds. Waiting for someone to touch the grass before
+           anything moves meant most people never saw it move at all. */
+        if (!reduce) { gust = 1; pushWind(); wake(); }
       } else {
         s3.classList.remove('is-in');
         hideHint();
-        runFX(false);
+        stopFX();
+        /* The wind uniform is deliberately NOT cleared here. Both chapters
+           listen to the same scenechange, this script is registered first,
+           and on the way from chapter 4 to chapter 3 that meant chapter 3
+           set its wind and chapter 4's handler then zeroed it a moment
+           later. The canopy stood perfectly still and nothing in the code
+           looked wrong. Whoever arrives sets their own wind; the chapters
+           before these two cannot move whatever it says, because the blue
+           channel of their masks is empty. */
       }
     });
   })();
