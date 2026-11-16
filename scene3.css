@@ -14,42 +14,48 @@
 
     /* ---------------- the morning beams ----------------
        Three shafts coming in over the right shoulder, which is where the
-       light in the painting comes from.
+       light in the painting comes from. Drawn in CSS rather than on the
+       canvas: they never change shape, so there is no reason to repaint
+       them sixty times a second, and the compositor can hold them on a
+       layer of their own.
 
-       All three live in one element. The first build gave each its own
-       rotated box and blended the stack in screen mode, and that cost 33ms
-       a frame on a machine with no GPU: 100ms against 67ms for the same
-       painting in the chapter before it. Half of that was the blend mode
-       and the rest was three large half transparent layers for the
-       compositor to carry. One element with one angled gradient paints the
-       same three shafts in a single pass.
-
-       The bands run perpendicular to the gradient's own axis, so 113deg
-       leans them 23 degrees off vertical, down towards the left. The
-       radial mask is what makes them read as shafts rather than stripes:
-       it holds them at full weight up by the sun and lets them die out
-       across the grass. */
+       Each shaft is a long box turned about its top edge. The gradient
+       across its width gives the soft sides, and the mask down its length
+       lets it run out before it reaches the grass, so the beam fades
+       instead of ending in a straight cut. */
     .s3-rays {
       position: absolute; inset: 0;
-      pointer-events: none;
-      /* The three shafts and their falloff, drawn once into an image
-         rather than built out of a gradient and a mask every frame.
-
-         Three separately rotated and screen blended boxes cost 33ms a
-         frame on a machine with no GPU; one gradient with a mask still
-         cost 16.7. A picture costs the compositor a texture and nothing
-         else, and an opacity animation over it never touches paint at
-         all, which is what keeps the breathing free on a phone. */
-      /* The texture is baked into index.html as a data URI; the file itself
-         is s3/rays.webp. */
-      background-image: url('s3/rays.webp');
-      background-size: cover;
-      background-position: 50% 0;
-      background-repeat: no-repeat;
+      overflow: hidden; pointer-events: none;
+      mix-blend-mode: screen;
+    }
+    .s3-rays i {
+      position: absolute;
+      top: -24vh; right: calc(-6vw + var(--i) * 15vw);
+      width: clamp(120px, 15vw, 260px);
+      height: 165vh;
+      transform-origin: top center;
+      transform: rotate(23deg);
+      background: linear-gradient(to right,
+        rgba(255, 243, 200, 0) 0%,
+        rgba(255, 243, 200, .14) 38%,
+        rgba(255, 243, 200, .14) 62%,
+        rgba(255, 243, 200, 0) 100%);
+      -webkit-mask-image: linear-gradient(to bottom,
+        rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, .92) 34%,
+        rgba(0, 0, 0, .45) 68%, rgba(0, 0, 0, 0) 100%);
+      mask-image: linear-gradient(to bottom,
+        rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, .92) 34%,
+        rgba(0, 0, 0, .45) 68%, rgba(0, 0, 0, 0) 100%);
       opacity: .08;
       will-change: opacity;
       animation: s3Ray 6s ease-in-out infinite;
+      /* Offset in thirds of the cycle, so the three never brighten
+         together and the light reads as air moving rather than a lamp on
+         a dimmer. */
+      animation-delay: calc(var(--i) * -2s);
     }
+    .s3-rays i:nth-child(2) { width: clamp(90px, 11vw, 200px); transform: rotate(20deg); }
+    .s3-rays i:nth-child(3) { width: clamp(150px, 19vw, 320px); transform: rotate(26deg); }
 
     @keyframes s3Ray {
       0%, 100% { opacity: .08; }
@@ -61,6 +67,13 @@
       width: 100%; height: 100%;
       display: block;
       pointer-events: none;
+      /* The canvas composites its own particles additively, but the
+         element itself was still laid over the painting the ordinary way,
+         which meant every glow dimmed the grass underneath by its own
+         alpha before adding anything back. Screen is what carries the
+         addition through to the painting: it lifts the shade under the
+         trees, leaves the sunlit sky alone, and can never darken. */
+      mix-blend-mode: screen;
     }
 
     /* ---------------- the line that invites the first touch ---------------- */
@@ -81,11 +94,11 @@
 
     @media (max-width: 760px) {
       #s3-hint { font-size: 12.5px; padding: 8px 14px; }
+      .s3-rays i { height: 150vh; }
     }
 
     /* Someone who asked not to be shown movement gets the light, held
        still. The canvas never starts, so there is nothing else to stop. */
     @media (prefers-reduced-motion: reduce) {
-      .s3-rays { animation: none; opacity: .13; }
+      .s3-rays i { animation: none; opacity: .12; }
     }
-

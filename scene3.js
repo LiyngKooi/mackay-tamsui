@@ -1,13 +1,14 @@
   /* ====================== Scene 3 · 啟蒙（理學堂大書院） ======================
      The chapter is the painting and the light on it. One canvas carries
-     everything that moves: fifteen seeds on the wind, a few butterflies
-     that a touch puts up out of the grass, and the thin wake a finger
-     leaves when it turns the view.
+     everything that moves: fireflies breathing over the grass, flecks of
+     gold leaf catching the morning, and now and then a thread of dust
+     drawn across the sky. A finger leaves light where it passes, and a
+     touch on the grass puts the whole patch up at once.
 
-     The canvas is deaf to the pointer, so the press that reaches it has
-     already passed every button on the page. What turns the view is #s3
-     underneath; what the effects listen for is the same gesture, read
-     from the window and thrown away when it lands on a control. */
+     The canvas is deaf to the pointer, so a press reaches it only after it
+     has passed every button on the page. What turns the view is #s3
+     underneath; what the light listens for is the same gesture, read from
+     the window and thrown away when it lands on a control. */
   (function () {
     'use strict';
 
@@ -32,9 +33,10 @@
     const hintEl = document.getElementById('s3-hint');
     if (!s3 || !cv) return;
 
-    const ctx = cv.getContext('2d', { alpha: true });
-    const TAU = Math.PI * 2;
+    const ctx  = cv.getContext('2d', { alpha: true });
+    const TAU  = Math.PI * 2;
     const rand = (a, b) => a + Math.random() * (b - a);
+    const pick = a => a[(Math.random() * a.length) | 0];
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     let lang3 = (document.documentElement.lang || 'zh').indexOf('en') === 0 ? 'en' : 'zh';
@@ -68,180 +70,318 @@
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
-    /* A soft dot, drawn once into its own little canvas and stamped from
-       there. Building a radial gradient per particle per frame is what
-       makes this kind of layer expensive; one drawImage is close to free. */
-    function makeGlow(rgb) {
+    /* ---------------- what the light is made of ----------------
+       Every shape is drawn once into a little canvas of its own and
+       stamped from there. Building a radial gradient per particle per
+       frame is what makes a layer like this expensive; a drawImage of a
+       cached sprite is close to free, and it is the only reason forty
+       lights and a burst on top of them cost nothing to speak of. */
+    function bokehSprite(rgb) {
       const c = document.createElement('canvas');
-      c.width = c.height = 64;
+      c.width = c.height = 128;
       const g = c.getContext('2d');
-      const rg = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-      rg.addColorStop(0.00, 'rgba(' + rgb + ',0.90)');
-      rg.addColorStop(0.22, 'rgba(' + rgb + ',0.34)');
+      const rg = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+      /* A disc with a soft rim, not a point with a halo. Out of focus
+         light is a flat round plate: the first build fell away from the
+         centre immediately, which over a sunlit painting left a pinprick
+         that read as a speck of dust rather than a firefly. The body is
+         held almost flat to half the radius and only then let go. */
+      rg.addColorStop(0.00, 'rgba(' + rgb + ',1)');
+      rg.addColorStop(0.34, 'rgba(' + rgb + ',0.80)');
+      rg.addColorStop(0.52, 'rgba(' + rgb + ',0.62)');
+      rg.addColorStop(0.74, 'rgba(' + rgb + ',0.24)');
       rg.addColorStop(1.00, 'rgba(' + rgb + ',0)');
       g.fillStyle = rg;
-      g.fillRect(0, 0, 64, 64);
+      g.fillRect(0, 0, 128, 128);
       return c;
     }
-    const GLOW_PALE = makeGlow('255,252,240');
-    const GLOW_GOLD = makeGlow('255,214,130');
 
-    /* ---------------- the seeds ----------------
-       Fifteen, which is enough to read as weather and few enough that the
-       whole layer stays one short pass. They come in over the right
-       shoulder with the light and cross to the lower left, swinging as
-       they fall, the way a pappus actually travels. */
-    const SEED_N = 15;
-    const seeds = [];
+    /* A four pointed sparkle with its sides drawn in towards the middle,
+       which is what makes it read as struck foil rather than the asterisk
+       a star of straight spokes gives you. */
+    function foilSprite(rgb) {
+      const c = document.createElement('canvas');
+      c.width = c.height = 128;
+      const g = c.getContext('2d');
+      const rg = g.createRadialGradient(64, 64, 0, 64, 64, 40);
+      rg.addColorStop(0.00, 'rgba(' + rgb + ',0.85)');
+      rg.addColorStop(1.00, 'rgba(' + rgb + ',0)');
+      g.fillStyle = rg;
+      g.fillRect(0, 0, 128, 128);
 
-    function castSeed(s, anywhere) {
-      s.x    = anywhere ? rand(-0.05, 1.15) * W : rand(0.55, 1.25) * W;
-      s.y    = anywhere ? rand(-0.10, 1.00) * H : rand(-0.30, 0.25) * H;
-      s.r    = rand(1.1, 2.4);
-      s.vx   = -rand(9, 21);
-      s.vy   =  rand(10, 23);
-      s.amp  = rand(9, 30);
-      s.freq = rand(0.22, 0.55);
-      s.ph   = rand(0, TAU);
-      s.rot  = rand(0, TAU);
-      s.spin = rand(-0.45, 0.45);
-      s.gold = Math.random() < 0.45;
-      s.a    = rand(0.42, 0.88);
+      const R = 58, w = 5.5;
+      g.translate(64, 64);
+      g.fillStyle = 'rgba(' + rgb + ',1)';
+      g.beginPath();
+      g.moveTo(0, -R);
+      g.quadraticCurveTo(w, -w, R, 0);
+      g.quadraticCurveTo(w, w, 0, R);
+      g.quadraticCurveTo(-w, w, -R, 0);
+      g.quadraticCurveTo(-w, -w, 0, -R);
+      g.fill();
+      /* A shorter pair across the diagonals, so it glitters rather than
+         sitting there as a clean cross. */
+      g.rotate(Math.PI / 4);
+      g.globalAlpha = 0.5;
+      g.beginPath();
+      g.moveTo(0, -R * 0.42);
+      g.quadraticCurveTo(w * 0.5, -w * 0.5, R * 0.42, 0);
+      g.quadraticCurveTo(w * 0.5, w * 0.5, 0, R * 0.42);
+      g.quadraticCurveTo(-w * 0.5, w * 0.5, -R * 0.42, 0);
+      g.quadraticCurveTo(-w * 0.5, -w * 0.5, 0, -R * 0.42);
+      g.fill();
+      return c;
     }
-    function seedAll(anywhere) {
-      seeds.length = 0;
-      for (let i = 0; i < SEED_N; i++) { const s = {}; castSeed(s, anywhere); seeds.push(s); }
-    }
 
-    function stepSeed(s, dt) {
-      s.x += s.vx * dt;
-      s.y += s.vy * dt;
-      s.rot += s.spin * dt;
-      if (s.y > H + 40 || s.x < -60) castSeed(s, false);
-    }
+    const AMBER = bokehSprite('255,209,102');   /* #FFD166 */
+    const GOLD  = bokehSprite('244,162,97');    /* #F4A261 */
+    const CREAM = bokehSprite('255,248,231');   /* #FFF8E7 */
+    const BOKEH = [AMBER, GOLD, CREAM, AMBER, CREAM];   /* amber and cream lead */
+    const FOIL  = foilSprite('255,229,153');    /* #FFE599 */
 
-    function drawSeed(s, t) {
-      const x = s.x + Math.sin(t * s.freq + s.ph) * s.amp;
-      const y = s.y;
-      const R = s.r * 7;
-      ctx.globalAlpha = s.a * 0.5;
-      ctx.drawImage(s.gold ? GLOW_GOLD : GLOW_PALE, x - R, y - R, R * 2, R * 2);
+    /* ---------------- the resident light ----------------
+       Thirty six of them, which is enough that the air is never empty and
+       few enough that nothing has to be thinned when a burst lands on top. */
+    /* Forty four, inside the band the brief asks for. Twenty was too thin
+       to read across a screen this wide: the air looked empty between
+       them. */
+    const BOKEH_N = 26, FOIL_N = 18;
+    const lights = [];
 
-      /* The crown of hairs, then the seed itself. Six strokes is the
-         fewest that still reads as a pappus rather than an asterisk. */
-      ctx.globalAlpha = s.a * 0.85;
-      ctx.strokeStyle = s.gold ? 'rgba(255,226,166,0.9)' : 'rgba(255,253,247,0.92)';
-      ctx.lineWidth = 0.9;
-      ctx.beginPath();
-      for (let i = 0; i < 6; i++) {
-        const a = s.rot + i * (Math.PI / 3);
-        ctx.moveTo(x, y);
-        ctx.lineTo(x + Math.cos(a) * s.r * 3.1, y + Math.sin(a) * s.r * 3.1);
+    function castLight(p, kind, anywhere) {
+      p.kind = kind;
+      p.x = rand(-0.04, 1.04) * W;
+      /* Fireflies belong over the grass and the bushes, and that is also
+         the only place they can be seen: added light does nothing to a
+         sky that is already near white, and everything to foliage in
+         shade. The sky gets the stardust instead. Foil is scattered
+         wider, since it is the page's gilding rather than an insect. */
+      const top = kind === 'bokeh' ? 0.40 : 0.06;
+      p.y = anywhere ? rand(top, 1.05) * H : rand(1.02, 1.3) * H;
+      if (kind === 'bokeh') {
+        p.r    = rand(2.5, 10);
+        p.img  = pick(BOKEH);
+        /* Big ones are soft and dim, small ones are tight and bright,
+           which is how a lens actually renders light it cannot resolve
+           and what stops the large discs from blowing out to white when
+           two of them cross. */
+        p.a    = Math.max(0.46, Math.min(1, 1.16 - p.r * 0.054)) * rand(0.88, 1.08);
+        p.rise = rand(5, 17);
+        p.bw   = rand(0.30, 0.95);            /* its own breath */
+      } else {
+        /* Most of the foil is dust; a few are struck stars. */
+        p.star = Math.random() < 0.42;
+        p.r    = p.star ? rand(3.0, 7.5) : rand(0.8, 1.9);
+        p.img  = FOIL;
+        p.a    = p.star ? rand(0.62, 1) : rand(0.45, 0.8);
+        p.rise = rand(4, 14);
+        p.bw   = rand(0.8, 2.1);              /* foil twinkles quicker */
+        p.rot  = rand(0, TAU);
+        p.spin = rand(-0.5, 0.5);
       }
-      ctx.stroke();
-
-      ctx.globalAlpha = s.a;
-      ctx.fillStyle = s.gold ? 'rgba(255,238,200,1)' : 'rgba(255,255,255,1)';
-      ctx.beginPath();
-      ctx.arc(x, y, s.r * 0.6, 0, TAU);
-      ctx.fill();
+      p.ph   = rand(0, TAU);
+      p.amp  = rand(6, 26);                   /* how far the air carries it */
+      p.sw   = rand(0.14, 0.42);
+      p.drift = rand(-7, 7);
     }
 
-    /* ---------------- the butterflies ----------------
-       A touch on the grass puts one or two up. They leave on a curve
-       towards the roof of the college, which is the thing the chapter is
-       about, and are gone by the time they get there. */
-    const FLY_MAX = 4;
-    const flies = [];
+    function seedLights(anywhere) {
+      lights.length = 0;
+      for (let i = 0; i < BOKEH_N; i++) { const p = {}; castLight(p, 'bokeh', anywhere); lights.push(p); }
+      for (let i = 0; i < FOIL_N;  i++) { const p = {}; castLight(p, 'foil',  anywhere); lights.push(p); }
+    }
 
-    function putUpButterflies(px, py) {
-      const n = Math.random() < 0.5 ? 2 : 1;
+    function drawLights(dt, t) {
+      for (let i = 0; i < lights.length; i++) {
+        const p = lights[i];
+        p.y -= p.rise * dt;
+        p.x += p.drift * dt;
+        if (p.y < -0.12 * H) { castLight(p, p.kind, false); continue; }
+
+        const x = p.x + Math.sin(t * p.sw + p.ph) * p.amp;
+        const s = 0.5 + 0.5 * Math.sin(t * p.bw + p.ph);
+
+        if (p.kind === 'bokeh') {
+          ctx.globalAlpha = p.a * (0.5 + 0.5 * s);
+          const R = p.r * 1.9;
+          ctx.drawImage(p.img, x - R, p.y - R, R * 2, R * 2);
+        } else {
+          /* Squared, so the foil sits dark most of the time and flashes,
+             the way a struck surface catches the light only on the turn. */
+          ctx.globalAlpha = p.a * (0.1 + 0.9 * s * s);
+          p.rot += p.spin * dt;
+          const R = p.r * (p.star ? 2.4 : 3.4);
+          ctx.save();
+          ctx.translate(x, p.y);
+          ctx.rotate(p.rot);
+          ctx.drawImage(p.img, -R, -R, R * 2, R * 2);
+          ctx.restore();
+        }
+      }
+    }
+
+    /* ---------------- a thread of dust across the sky ----------------
+       Once every several seconds, high up. It is a head with a tail of its
+       own recent positions, so the arc draws itself and goes out behind. */
+    let arc = null, nextArc = rand(2.5, 5);
+
+    function castArc() {
+      const leftward = Math.random() < 0.5;
+      /* Down nearer the treetops rather than up in the open sky. Added
+         light does almost nothing to a pale sky and a great deal against
+         foliage, so the thread is drawn where it can actually be seen. */
+      const y0 = rand(0.20, 0.50) * H;
+      arc = {
+        x: leftward ? rand(0.75, 1.05) * W : rand(-0.05, 0.25) * W,
+        y: y0,
+        vx: (leftward ? -1 : 1) * rand(0.17, 0.30) * W,
+        vy: rand(-0.02, 0.05) * H,
+        ay: rand(0.03, 0.10) * H,            /* a gentle sag, so it arcs */
+        t: 0, life: rand(2.2, 3.4),
+        trail: [],
+      };
+    }
+
+    function drawArc(dt) {
+      if (!arc) {
+        nextArc -= dt;
+        if (nextArc <= 0) { castArc(); nextArc = rand(4.5, 9); }
+        return;
+      }
+      arc.t += dt;
+      arc.vy += arc.ay * dt;
+      arc.x  += arc.vx * dt;
+      arc.y  += arc.vy * dt;
+      arc.trail.push(arc.x, arc.y);
+      if (arc.trail.length > 76) arc.trail.splice(0, 2);
+
+      const u = arc.t / arc.life;
+      /* Comes up, holds, goes out. */
+      const fade = u < 0.18 ? u / 0.18 : u > 0.62 ? Math.max(0, (1 - u) / 0.38) : 1;
+
+      const n = arc.trail.length / 2;
       for (let i = 0; i < n; i++) {
-        if (flies.length >= FLY_MAX) break;
-        const x0 = px + rand(-16, 16), y0 = py + rand(-12, 12);
-        const x1 = W * 0.5 + rand(-0.13, 0.13) * W;
-        const y1 = H * 0.30 + rand(-0.07, 0.07) * H;
-        flies.push({
-          x0: x0, y0: y0, x1: x1, y1: y1,
-          /* The handle sits off to one side and well above both ends, so
-             the path lifts and leans instead of running straight. */
-          cx: (x0 + x1) / 2 + rand(-0.20, 0.20) * W,
-          cy: Math.min(y0, y1) - rand(0.08, 0.24) * H,
-          t: 0, life: rand(2.7, 3.3),
-          size: rand(7, 11), ph: rand(0, TAU), flap: rand(12, 19),
-          x: x0, y: y0, ang: 0,
+        const k = i / n;                      /* 0 oldest, 1 newest */
+        const R = 1.6 + 6.0 * k;
+        ctx.globalAlpha = fade * 0.9 * k * k;
+        ctx.drawImage(CREAM, arc.trail[i * 2] - R, arc.trail[i * 2 + 1] - R, R * 2, R * 2);
+      }
+      ctx.globalAlpha = fade;
+      ctx.drawImage(CREAM, arc.x - 13, arc.y - 13, 26, 26);
+      ctx.drawImage(AMBER, arc.x - 8, arc.y - 8, 16, 16);
+
+      if (arc.t >= arc.life || arc.x < -0.15 * W || arc.x > 1.15 * W) arc = null;
+    }
+
+    /* ---------------- what a finger leaves behind ----------------
+       Light falls where the pointer goes and lifts away. Kept sparse and
+       short lived: a trail that lingers stops reading as dust and starts
+       reading as a brush. */
+    const TRAIL_MAX = 30;
+    const trail = [];
+
+    function dropDust(x, y, vx) {
+      for (let i = 0, n = 2 + (Math.random() < 0.5 ? 1 : 0); i < n; i++) {
+        if (trail.length >= TRAIL_MAX) return;
+        const star = Math.random() < 0.3;
+        trail.push({
+          x: x + rand(-7, 7), y: y + rand(-7, 7),
+          vx: vx * rand(0.05, 0.22) + rand(-11, 11),
+          vy: rand(-34, -9),
+          r: star ? rand(2.8, 5.4) : rand(1.8, 4.6),
+          star: star, img: star ? FOIL : pick(BOKEH),
+          rot: rand(0, TAU), spin: rand(-2.2, 2.2),
+          t: 0, life: rand(0.8, 1.5), a: rand(0.68, 1),
         });
       }
     }
 
-    /* Slow at both ends: it has to look like something deciding to go,
-       not something fired out of a tube. */
-    const ease = u => u * u * u * (u * (u * 6 - 15) + 10);
+    /* ---------------- a touch on the grass ----------------
+       A ring of warm light opening outwards, and the fireflies that were
+       sitting in that patch going up all at once. */
+    const BURST_MAX = 40, RING_MAX = 3;
+    const burst = [], rings = [];
 
-    function stepFly(f, dt) {
-      f.t += dt / f.life;
-      const u = ease(Math.min(1, f.t)), v = 1 - u;
-      const nx = v * v * f.x0 + 2 * v * u * f.cx + u * u * f.x1;
-      const ny = v * v * f.y0 + 2 * v * u * f.cy + u * u * f.y1;
-      /* Heading from where it actually went this frame, so the body keeps
-         pointing along the curve. */
-      const dx = nx - f.x, dy = ny - f.y;
-      if (dx || dy) f.ang = Math.atan2(dy, dx) + Math.PI / 2;
-      f.x = nx; f.y = ny;
-      return f.t < 1;
-    }
+    function startle(px, py) {
+      if (rings.length < RING_MAX) rings.push({ x: px, y: py, t: 0, life: 0.95 });
 
-    function drawFly(f, t) {
-      const a = f.t < 0.12 ? f.t / 0.12
-              : f.t > 0.70 ? Math.max(0, (1 - f.t) / 0.30)
-              : 1;
-      if (a <= 0) return;
-      const flap = Math.abs(Math.sin(t * f.flap + f.ph));
-      const spread = 0.26 + 0.74 * flap;      /* wings seen edge on to flat */
-      const S = f.size;
-
-      ctx.save();
-      ctx.translate(f.x, f.y);
-      ctx.rotate(f.ang);
-
-      const R = S * 2.7;
-      ctx.globalAlpha = a * 0.3;
-      ctx.drawImage(GLOW_GOLD, -R, -R, R * 2, R * 2);
-
-      ctx.globalAlpha = a * 0.92;
-      ctx.fillStyle = 'rgba(255,208,122,0.88)';
-      for (let side = -1; side <= 1; side += 2) {
-        ctx.save();
-        ctx.scale(side * spread, 1);
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.bezierCurveTo(S * 0.40, -S * 1.10, S * 1.50, -S * 0.86, S * 1.14, -S * 0.04);
-        ctx.bezierCurveTo(S * 1.44,  S * 0.74, S * 0.50,  S * 0.96, 0, 0);
-        ctx.fill();
-        ctx.restore();
+      const n = 12 + ((Math.random() * 7) | 0);      /* 12 to 18 */
+      for (let i = 0; i < n; i++) {
+        if (burst.length >= BURST_MAX) break;
+        const a = rand(0, TAU);
+        /* Thrown out, then the air takes it, and what is left is the
+           climb. */
+        const sp = rand(90, 320);
+        const star = Math.random() < 0.35;
+        burst.push({
+          x: px + rand(-5, 5), y: py + rand(-5, 5),
+          vx: Math.cos(a) * sp,
+          vy: Math.sin(a) * sp * 0.78 - rand(20, 70),
+          r: star ? rand(2.6, 6.2) : rand(2, 8),
+          star: star, img: star ? FOIL : pick(BOKEH),
+          rot: rand(0, TAU), spin: rand(-3.4, 3.4),
+          t: 0, life: rand(1.5, 2.6), a: rand(0.7, 1),
+          bw: rand(3, 7), ph: rand(0, TAU),
+        });
       }
-      ctx.globalAlpha = a;
-      ctx.fillStyle = 'rgba(255,238,198,0.95)';
-      ctx.beginPath();
-      ctx.ellipse(0, 0, S * 0.13, S * 0.5, 0, 0, TAU);
-      ctx.fill();
-      ctx.restore();
     }
 
-    /* ---------------- the wake under a finger ----------------
-       Sparse on purpose: a few points that lift and go out, so turning the
-       view feels like moving air rather than painting with a brush. */
-    const MOTE_MAX = 10;
-    const motes = [];
+    function drawFlecks(list, dt, t) {
+      for (let i = list.length - 1; i >= 0; i--) {
+        const p = list[i];
+        p.t += dt;
+        if (p.t >= p.life) { list.splice(i, 1); continue; }
+        /* Drag, then lift. The first build halved the speed every tenth
+           of a second, which stopped the whole burst dead on the spot it
+           was thrown from and left a smudge rather than a scatter. At
+           this rate the speed halves in about four fifths of a second, so
+           the throw carries and then the climb takes over. */
+        const k = Math.pow(0.42, dt);
+        p.vx *= k; p.vy *= k;
+        p.vy -= 30 * dt;
+        p.x += p.vx * dt; p.y += p.vy * dt;
+        p.rot += p.spin * dt;
 
-    function breeze(x, y, dx) {
-      if (motes.length >= MOTE_MAX) return;
-      motes.push({
-        x: x + rand(-7, 7), y: y + rand(-7, 7),
-        vx: dx * rand(0.9, 2.2) + rand(-10, 10),
-        vy: rand(-26, -6),
-        t: 0, life: rand(0.55, 1.0), r: rand(0.9, 2.0),
-      });
+        const u = p.t / p.life;
+        const fade = u < 0.10 ? u / 0.10 : Math.max(0, (1 - u) / 0.9);
+        const tw = p.bw ? (0.55 + 0.45 * Math.sin(t * p.bw + p.ph)) : 1;
+        ctx.globalAlpha = p.a * fade * tw;
+        const R = p.r * (p.star ? 2.4 : 2.6);
+        if (p.star) {
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.drawImage(p.img, -R, -R, R * 2, R * 2);
+          ctx.restore();
+        } else {
+          ctx.drawImage(p.img, p.x - R, p.y - R, R * 2, R * 2);
+        }
+      }
+    }
+
+    function drawRings(dt) {
+      for (let i = rings.length - 1; i >= 0; i--) {
+        const g = rings[i];
+        g.t += dt;
+        if (g.t >= g.life) { rings.splice(i, 1); continue; }
+        const u = g.t / g.life;
+        /* Fast out of the gate and easing to a stop, which is how a ring
+           on water opens. */
+        const e = 1 - Math.pow(1 - u, 3);
+        const R = 6 + e * Math.min(135, Math.max(W, H) * 0.12);
+        ctx.globalAlpha = (1 - u) * (1 - u) * 0.72;
+        ctx.strokeStyle = 'rgba(255,221,150,1)';
+        ctx.lineWidth = Math.max(0.7, 4.2 * (1 - u));
+        ctx.beginPath();
+        ctx.arc(g.x, g.y, R, 0, TAU);
+        ctx.stroke();
+        /* A second, fainter ring just behind it, so the water has depth. */
+        ctx.globalAlpha = (1 - u) * (1 - u) * 0.3;
+        ctx.lineWidth = Math.max(0.5, 1.8 * (1 - u));
+        ctx.beginPath();
+        ctx.arc(g.x, g.y, R * 0.72, 0, TAU);
+        ctx.stroke();
+      }
     }
 
     /* ---------------- the loop ---------------- */
@@ -255,26 +395,15 @@
       clock += dt;
 
       ctx.clearRect(0, 0, W, H);
+      /* Added to the painting rather than laid over it, so the light sits
+         in the grass and on the brick instead of greying them. */
       ctx.globalCompositeOperation = 'lighter';
 
-      for (let i = 0; i < seeds.length; i++) { stepSeed(seeds[i], dt); drawSeed(seeds[i], clock); }
-
-      for (let i = motes.length - 1; i >= 0; i--) {
-        const m = motes[i];
-        m.t += dt;
-        if (m.t >= m.life) { motes.splice(i, 1); continue; }
-        m.x += m.vx * dt; m.y += m.vy * dt;
-        m.vy += 14 * dt;
-        const a = 1 - m.t / m.life;
-        const R = m.r * 6;
-        ctx.globalAlpha = a * 0.55;
-        ctx.drawImage(GLOW_PALE, m.x - R, m.y - R, R * 2, R * 2);
-      }
-
-      for (let i = flies.length - 1; i >= 0; i--) {
-        if (!stepFly(flies[i], dt)) { flies.splice(i, 1); continue; }
-        drawFly(flies[i], clock);
-      }
+      drawLights(dt, clock);
+      drawArc(dt);
+      drawFlecks(trail, dt, clock);
+      drawFlecks(burst, dt, clock);
+      drawRings(dt);
 
       ctx.globalCompositeOperation = 'source-over';
       ctx.globalAlpha = 1;
@@ -289,14 +418,14 @@
       } else {
         cancelAnimationFrame(raf);
         ctx.clearRect(0, 0, W, H);
-        flies.length = 0; motes.length = 0;
+        trail.length = 0; burst.length = 0; rings.length = 0; arc = null;
       }
     }
 
     /* ---------------- what counts as touching the grass ----------------
        Anything that landed on a control is not a touch on the grass, and
-       neither is the top of the screen where the chapters live or the
-       foot of it where this chapter's own buttons will sit. */
+       neither is the top of the screen where the chapters live or the foot
+       of it where this chapter's own buttons will sit. */
     function onChrome(e) {
       const t = e.target;
       if (t && t.closest &&
@@ -306,18 +435,32 @@
       return e.clientY < navH + 14 || e.clientY > innerHeight - 96;
     }
 
-    /* A drag ends with a click of its own, and that click is not a tap on
-       the grass. Settling this on pointerup with a distance guard is the
-       only way to tell the two apart: the gap between a drag and its click
-       has no upper bound, so no amount of waiting separates them. */
     let active = false;
+
+    /* The trail follows the pointer whether or not anything is held down,
+       read from the window so it keeps up across the whole page, and
+       dropped the moment it crosses a control. */
+    let lastDust = 0, lastMX = 0;
+    addEventListener('pointermove', e => {
+      if (!active || reduce || !running) return;
+      if (onChrome(e)) { lastMX = e.clientX; return; }
+      const now = performance.now();
+      if (now - lastDust < 16) return;
+      lastDust = now;
+      dropDust(e.clientX, e.clientY, e.clientX - lastMX);
+      lastMX = e.clientX;
+    }, { passive: true });
+
+    /* A drag ends with a click of its own, and that click is not a touch
+       on the grass. Settling this on pointerup with a distance guard is
+       the only way to tell the two apart: the gap between a drag and its
+       click has no upper bound, so no amount of waiting separates them. */
     (function () {
-      let id = null, x0 = 0, y0 = 0, p0 = 0, moved = 0, lastX = 0, lastEmit = 0;
+      let id = null, x0 = 0, y0 = 0, p0 = 0, moved = 0;
 
       s3.addEventListener('pointerdown', e => {
         if (!active || onChrome(e)) return;
-        id = e.pointerId; x0 = lastX = e.clientX; y0 = e.clientY; p0 = pan; moved = 0;
-        lastEmit = 0;
+        id = e.pointerId; x0 = e.clientX; y0 = e.clientY; p0 = pan; moved = 0;
         try { s3.setPointerCapture(id); } catch (_) {}
       });
 
@@ -327,23 +470,14 @@
         moved = Math.max(moved, Math.abs(dx), Math.abs(e.clientY - y0));
         const s = (innerWidth / innerHeight) / PANO_A;
         setPan(p0 + (dx / innerWidth) * Math.min(s, 1));
-
-        if (!reduce && moved > 8) {
-          const now = performance.now();
-          if (now - lastEmit > 48) {
-            lastEmit = now;
-            breeze(e.clientX, e.clientY, Math.sign(e.clientX - lastX) || 1);
-          }
-          lastX = e.clientX;
-          hideHint();
-        }
+        if (moved > 8) hideHint();
       });
 
       const up = e => {
         if (e.pointerId !== id) return;
         id = null;
         if (moved <= 8 && !reduce && !onChrome(e)) {
-          putUpButterflies(e.clientX, e.clientY);
+          startle(e.clientX, e.clientY);
           hideHint();
         }
       };
@@ -352,10 +486,10 @@
     })();
 
     /* Assistive software can raise a click that no pointer produced. That
-       one is a real press and still deserves its butterflies. */
+       one is a real press and still deserves its fireflies. */
     s3.addEventListener('click', e => {
       if (!active || reduce || e.detail !== 0 || onChrome(e)) return;
-      putUpButterflies(e.clientX || W / 2, e.clientY || H / 2);
+      startle(e.clientX || W / 2, e.clientY || H / 2);
     });
 
     /* ---------------- the hint ---------------- */
@@ -375,7 +509,7 @@
     addEventListener('resize', () => {
       if (!active) return;
       sizeCanvas();
-      seedAll(true);
+      seedLights(true);
       setPan(pan);
     });
 
@@ -393,7 +527,8 @@
         if (window.__set) for (const k in LOOK) window.__set(k, LOOK[k]);
         setPan(0);
         sizeCanvas();
-        seedAll(true);
+        seedLights(true);
+        arc = null; nextArc = rand(2.5, 5);
         s3.classList.add('is-in');
         showHint();
         runFX(!reduce);
