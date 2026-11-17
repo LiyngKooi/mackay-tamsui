@@ -1,0 +1,504 @@
+    /* ================= Scene 5 · 尋蹤（手繪活點地圖） =================
+       The only light chapter in the piece. Everything before it is painted
+       at dusk or by lamplight and carries pale type on a dark card; this is
+       a sheet of cream paper on a white table in the middle of the day, so
+       the cards are paper too, with ink on them and a strip of tape holding
+       them down. Using the dark card here would have read as a window
+       opening onto a different website. */
+
+    #s5 {
+      position: fixed; inset: 0; z-index: 1;
+      opacity: 0; visibility: hidden; pointer-events: none;
+      transition: opacity 1.0s ease, visibility 0s linear 1.0s;
+      touch-action: pan-y; user-select: none; -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #s5.is-drag { cursor: grabbing; }
+    #s5.is-in {
+      opacity: 1; visibility: visible; pointer-events: auto;
+      transition: opacity 1.0s ease, visibility 0s;
+    }
+
+    /* Inside the chapter, not out at the foot of the body like the other
+       two. Those blend as screen and a stacked element isolates blending,
+       so they have to live outside; this one composites normally, because
+       the paper is cream at 223 levels and light added to anything that
+       pale does nothing. What shows up on this map is brown ink, not
+       light. */
+    #traces-fx-canvas {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+
+    /* ---------------- the places you can press ----------------
+       Nothing. No box, no border, no ring, no shadow: a watercolour map
+       with ten rounded rectangles laid over it stops being a map and
+       becomes a form. What says a place can be pressed is the drawing
+       itself rising off the paper, which the renderer does out of the
+       mask, and a small warm light at the way in, which the canvas draws.
+       Neither of them is this element. This element is a hit box. */
+    .s5-hot {
+      position: absolute;
+      margin: 0; padding: 0;
+      border: 0; background: transparent; box-shadow: none;
+      border-radius: 10px;
+      cursor: pointer;
+      appearance: none; -webkit-appearance: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .s5-hot:focus-visible { outline: 2px solid #8A6A2A; outline-offset: 3px; }
+
+    /* A reach of at least 44 pixels both ways, laid over the drawn mark
+       rather than around it, so the little bird on the far left can be
+       pressed on a phone. */
+    .s5-hot::after {
+      content: ''; position: absolute; left: 50%; top: 50%;
+      width: max(100%, 44px); height: max(100%, 44px);
+      transform: translate(-50%, -50%);
+    }
+
+    /* ---------------- the seal ----------------
+       Pressed onto the corner of the sticker when its questions have been
+       answered. Every seal in this chapter, on the map and on the slip
+       alike, is drawn by one function in the script and arrives here as an
+       SVG: a torn white paper base, a thick ring, a thin ring inside it and
+       two characters, all of it pushed about by a turbulence filter so no
+       two impressions are the same.
+
+       None of it is a circle. There is no border-radius anywhere in this
+       block, and that is the point of the block: a ring made with
+       border-radius is a perfect circle by construction, and a perfect
+       circle is the one thing a rubber stamp never leaves. Next to five
+       chapters of watercolour it read as a button. */
+    /* Inside the building's own box rather than hanging off the corner of
+       it. Hanging off looked right on the chapel and the monument, which
+       have open paper to their right, and wrong on the clinic, whose
+       corner is the banyan tree, and on the hill steps, where the seal
+       ended up floating forty pixels clear of anything. Inside, every
+       seal lands on the thing it belongs to. */
+    .s5-seal {
+      position: absolute; right: 2px; bottom: 0;
+      width: 54px; height: 54px;
+      display: block;
+      background: transparent; border: 0; box-shadow: none;
+      opacity: 0; transform: scale(2.1) rotate(-22deg);
+      pointer-events: none;
+    }
+    .s5-seal.is-mini { right: -6px; bottom: -4px; }
+    .s5-hot.is-done .s5-seal {
+      animation: s5Stamp .52s cubic-bezier(.2, 1.3, .4, 1) forwards;
+    }
+    @keyframes s5Stamp {
+      0%   { opacity: 0;   transform: scale(2.1) rotate(-22deg); }
+      55%  { opacity: 1;   transform: scale(.94) rotate(-9deg); }
+      100% { opacity: 1;   transform: scale(1)   rotate(-7deg); }
+    }
+
+    /* The seal itself, wherever it is used. The shadow is on the whole
+       drawing rather than on the paper alone, so the ink sits in the paper
+       instead of floating a layer above it. */
+    .s5-stamp {
+      display: block; width: 100%; height: 100%; overflow: visible;
+      filter: drop-shadow(0 3px 6px rgba(40, 25, 10, .28));
+    }
+    .s5-stamp.is-empty { filter: none; }
+    /* A brush face, falling back through every serif a Mac, a Windows
+       machine and an Android phone are each likely to have, and ending at
+       the one this page already loads. */
+    .s5-stamp-t {
+      font-family: 'Kaiti TC', 'BiauKai', 'DFKai-SB', 'LXGW WenKai TC',
+                   'Noto Serif TC', 'Songti TC', 'Source Han Serif TC', serif;
+      font-weight: 700; letter-spacing: .01em;
+    }
+    /* The filters live in a defs block, which is never drawn. This only
+       keeps the empty svg that carries them out of the layout. */
+    #s5-ink { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+    /* ---------------- the line that invites the first touch ---------------- */
+    #s5-hint {
+      position: fixed; z-index: 16;
+      left: 50%; top: calc(env(safe-area-inset-top) + 78px);
+      transform: translate(-50%, -8px);
+      margin: 0; padding: 7px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(96, 74, 40, .20);
+      background: rgba(255, 252, 244, .86);
+      -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+      font-family: 'Huninn', 'Noto Sans TC', sans-serif;
+      font-size: 13px; letter-spacing: .04em; color: #5A4A32;
+      opacity: 0; pointer-events: none;
+      transition: opacity .6s ease, transform .6s ease;
+    }
+    #s5-hint.is-in { opacity: 1; transform: translate(-50%, 0); }
+
+    /* ---------------- how far along you are ----------------
+       Two sheets of hand torn paper, kraft underneath and a paler washi on
+       top, with the walk named on the left and five rings on the right.
+       The torn edges are real outlines rather than a rounded corner
+       pretending: each is a polygon of some sixty points, generated once
+       and pasted here, so no two edges of the slip are alike and neither
+       sheet is torn the same way as the other. That difference is the
+       whole effect; a single sheet with a border reads as a label printed
+       onto the map rather than a piece of paper lying on it. */
+    #s5-prog {
+      position: fixed; z-index: 17;
+      left: max(16px, env(safe-area-inset-left));
+      bottom: max(16px, calc(env(safe-area-inset-bottom) + 12px));
+      padding: 6px 7px 8px 6px;
+      background: linear-gradient(152deg, #CBA876 0%, #BE9A66 48%, #C7A271 100%);
+      clip-path: polygon(0.00% 1.64%,2.78% 3.61%,5.56% 4.32%,8.33% 3.37%,11.11% 2.43%,13.89% 4.81%,16.67% 0.65%,19.44% 1.00%,22.22% 3.78%,25.00% 3.84%,27.78% 3.85%,30.56% 0.00%,33.33% 2.29%,36.11% 2.05%,38.89% 1.79%,41.67% 1.61%,44.44% 0.81%,47.22% 1.58%,50.00% 0.27%,52.78% 3.51%,55.56% 4.31%,58.33% 0.83%,61.11% 2.34%,63.89% 0.72%,66.67% 3.69%,69.44% 0.15%,72.22% 0.00%,75.00% 4.37%,77.78% 1.67%,80.56% 0.09%,83.33% 3.65%,86.11% 4.72%,88.89% 1.55%,91.67% 3.06%,94.44% 2.28%,97.22% 3.97%,100.00% 0.64%,99.19% 9.09%,99.24% 18.18%,98.74% 27.27%,98.71% 36.36%,99.55% 45.45%,99.45% 54.55%,99.76% 63.64%,99.81% 72.73%,99.93% 81.82%,99.74% 90.91%,100.00% 96.34%,97.22% 99.74%,94.44% 98.03%,91.67% 99.30%,88.89% 98.14%,86.11% 95.45%,83.33% 97.92%,80.56% 99.67%,77.78% 98.51%,75.00% 96.26%,72.22% 98.80%,69.44% 96.03%,66.67% 100.00%,63.89% 97.15%,61.11% 95.50%,58.33% 99.09%,55.56% 97.06%,52.78% 99.49%,50.00% 97.65%,47.22% 98.97%,44.44% 99.14%,41.67% 99.86%,38.89% 96.91%,36.11% 99.06%,33.33% 95.71%,30.56% 95.55%,27.78% 96.77%,25.00% 99.42%,22.22% 98.15%,19.44% 96.68%,16.67% 96.43%,13.89% 100.00%,11.11% 97.54%,8.33% 96.05%,5.56% 95.28%,2.78% 99.82%,0.00% 96.97%,0.08% 90.91%,0.38% 81.82%,0.79% 72.73%,1.32% 63.64%,0.51% 54.55%,1.40% 45.45%,0.78% 36.36%,0.41% 27.27%,0.35% 18.18%,0.15% 9.09%);
+      filter: drop-shadow(0 10px 16px rgba(60, 40, 16, .40));
+      opacity: 0; visibility: hidden; transform: translateY(10px) rotate(-.7deg);
+      transition: opacity .6s ease, transform .6s ease, visibility 0s linear .6s;
+    }
+    #s5-prog.is-in {
+      opacity: 1; visibility: visible; transform: translateY(0) rotate(-.7deg);
+      transition: opacity .6s ease, transform .6s ease, visibility 0s;
+    }
+    #s5-prog-paper {
+      display: flex; align-items: center; gap: 16px;
+      padding: 14px 18px 15px 19px;
+      background:
+        radial-gradient(130% 120% at 14% 0%, rgba(255, 255, 255, .72), transparent 62%),
+        linear-gradient(170deg, #FBF4E4 0%, #F4EAD5 100%);
+      clip-path: polygon(0.00% 3.20%,2.78% 3.78%,5.56% 5.07%,8.33% 0.57%,11.11% 1.53%,13.89% 1.99%,16.67% 3.47%,19.44% 0.21%,22.22% 0.00%,25.00% 2.63%,27.78% 1.83%,30.56% 1.19%,33.33% 0.00%,36.11% 1.39%,38.89% 3.54%,41.67% 0.79%,44.44% 2.22%,47.22% 4.41%,50.00% 1.39%,52.78% 0.00%,55.56% 4.00%,58.33% 3.58%,61.11% 2.22%,63.89% 2.03%,66.67% 5.27%,69.44% 2.14%,72.22% 2.35%,75.00% 1.41%,77.78% 3.68%,80.56% 2.91%,83.33% 0.31%,86.11% 0.72%,88.89% 3.14%,91.67% 2.62%,94.44% 1.78%,97.22% 2.82%,100.00% 3.53%,99.86% 9.09%,99.83% 18.18%,99.63% 27.27%,98.96% 36.36%,99.74% 45.45%,99.85% 54.55%,99.87% 63.64%,99.96% 72.73%,99.73% 81.82%,99.56% 90.91%,100.00% 95.61%,97.22% 99.16%,94.44% 99.40%,91.67% 98.62%,88.89% 97.53%,86.11% 96.01%,83.33% 98.37%,80.56% 99.79%,77.78% 99.20%,75.00% 95.37%,72.22% 96.55%,69.44% 97.26%,66.67% 99.73%,63.89% 97.01%,61.11% 94.79%,58.33% 97.30%,55.56% 96.83%,52.78% 99.86%,50.00% 94.89%,47.22% 98.74%,44.44% 98.34%,41.67% 100.00%,38.89% 96.76%,36.11% 96.01%,33.33% 94.76%,30.56% 96.83%,27.78% 96.86%,25.00% 97.74%,22.22% 94.54%,19.44% 95.93%,16.67% 99.10%,13.89% 96.69%,11.11% 98.23%,8.33% 98.03%,5.56% 99.16%,2.78% 98.74%,0.00% 100.00%,0.71% 90.91%,0.93% 81.82%,0.25% 72.73%,0.13% 63.64%,0.71% 54.55%,0.23% 45.45%,0.69% 36.36%,0.93% 27.27%,0.25% 18.18%,0.32% 9.09%);
+      filter: drop-shadow(1px 2px 2px rgba(86, 58, 22, .28));
+      transform: rotate(.35deg);
+    }
+
+    #s5-prog-text { display: grid; gap: 3px; }
+    #s5-prog-t {
+      margin: 0;
+      font-family: 'Noto Serif TC', 'Songti TC', 'Source Han Serif TC',
+                   'PMingLiU', '新細明體', serif;
+      font-size: 16.5px; font-weight: 600; letter-spacing: .10em; line-height: 1.2;
+      color: #4A3420;
+      white-space: nowrap;
+    }
+    #s5-prog-en {
+      margin: 0;
+      font-family: 'Lato', sans-serif;
+      font-size: 9.5px; font-weight: 700; letter-spacing: .22em;
+      text-transform: uppercase; line-height: 1.2;
+      color: #96754A;
+      white-space: nowrap;
+    }
+
+    /* The six side trips are counted in words on the line above rather
+       than given six more rings. Eleven rings on a slip this size would
+       turn a keepsake into a dashboard. */
+    #s5-prog-badge {
+      margin: 2px 0 0;
+      font-family: 'Noto Serif TC', 'Songti TC', 'PMingLiU', '新細明體', serif;
+      font-size: 11px; font-weight: 700; letter-spacing: .14em;
+      line-height: 1.2; color: #8A3B2C;
+      white-space: nowrap;
+    }
+    #s5-prog-badge::before { content: '— '; opacity: .5; }
+    #s5-prog-badge::after  { content: ' —'; opacity: .5; }
+
+    /* The five slots. Each one holds the same drawing the map is stamped
+       with, earned or not: earned it is the seal, unearned it is the shape
+       of the seal that is missing, dashed and faint. Nothing here is a
+       circle either. */
+    #s5-prog-slots { display: flex; gap: 8px; }
+    .s5-slot {
+      position: relative;
+      width: 38px; height: 38px; flex: none;
+      display: block;
+      transform: rotate(-3deg);
+    }
+    .s5-slot:nth-child(2n) { transform: rotate(2.5deg); }
+    .s5-slot.is-on { animation: s5SlotIn .5s cubic-bezier(.2, 1.3, .4, 1) backwards; }
+    @keyframes s5SlotIn {
+      0%   { opacity: 0; transform: scale(1.9) rotate(-18deg); }
+      100% { opacity: 1; }
+    }
+
+    /* On a narrow phone the slip gives up its gap first, then stacks the
+       rings under the writing, which is the only way five rings and two
+       lines of type fit across 360 points without either shrinking to
+       nothing. */
+    @media (max-width: 560px) {
+      #s5-prog-paper { gap: 10px; padding: 9px 12px 9px 13px; }
+      #s5-prog-t { font-size: 13.5px; letter-spacing: .06em; }
+      #s5-prog-en { font-size: 8.5px; letter-spacing: .16em; }
+      #s5-prog-badge { font-size: 10px; letter-spacing: .10em; }
+      #s5-prog-slots { gap: 5px; }
+      .s5-slot { width: 31px; height: 31px; }
+    }
+    @media (max-width: 400px) {
+      #s5-prog { right: max(16px, env(safe-area-inset-right)); }
+      #s5-prog-paper { flex-wrap: wrap; justify-content: space-between; }
+      #s5-prog-slots { width: 100%; justify-content: space-between; }
+    }
+
+    /* ---------------- the card ----------------
+       Paper, with a torn white edge and a strip of tape over the corner,
+       because this chapter is a map someone kept rather than a window onto
+       a place. */
+    #s5-card {
+      position: fixed; z-index: 19;
+      left: 50%; bottom: max(26px, calc(env(safe-area-inset-bottom) + 22px));
+      width: min(430px, calc(100vw - 36px));
+      /* A main station puts a question counter, three answers, a verdict
+         and a button under the story, which is half as tall again as the
+         two answer card this started out as. On a short phone held
+         upright that ran off the top of the screen, so the card keeps
+         itself inside what is left under the bar and scrolls if it has
+         to. The second line is the same thing measured against the
+         browser's own chrome where that is supported. */
+      max-height: calc(100vh - 150px);
+      max-height: calc(100dvh - 150px);
+      overflow-y: auto; overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      transform: translate(-50%, 16px) rotate(-.5deg);
+      box-sizing: border-box;
+      padding: 24px 24px 20px;
+      border: 9px solid #FFFDF8;
+      border-radius: 3px;
+      background:
+        radial-gradient(120% 90% at 20% 0%, rgba(255, 255, 255, .55), transparent 60%),
+        #F7EFDD;
+      box-shadow: 0 18px 44px -14px rgba(62, 44, 20, .46),
+                  0 2px 0 rgba(255, 255, 255, .7) inset;
+      opacity: 0; visibility: hidden; pointer-events: none;
+      transition: opacity .5s ease, transform .5s cubic-bezier(.22, .9, .3, 1),
+                  visibility 0s linear .5s;
+    }
+    #s5-card.is-in {
+      opacity: 1; visibility: visible; pointer-events: auto;
+      transform: translate(-50%, 0) rotate(-.5deg);
+      transition: opacity .5s ease, transform .5s cubic-bezier(.22, .9, .3, 1),
+                  visibility 0s;
+    }
+    .s5-tape {
+      position: absolute; left: -16px; top: -20px;
+      width: 104px; height: 27px;
+      transform: rotate(-7deg);
+      background:
+        repeating-linear-gradient(90deg,
+          rgba(255, 255, 255, .22) 0 3px, transparent 3px 7px),
+        linear-gradient(160deg, rgba(222, 201, 150, .80), rgba(206, 182, 128, .72));
+      box-shadow: 0 1px 4px rgba(74, 52, 24, .18);
+    }
+    #s5-card-x {
+      position: absolute; top: 9px; right: 9px;
+      width: 29px; height: 29px; padding: 0;
+      border: 1px solid rgba(96, 74, 40, .28); border-radius: 50%;
+      background: rgba(255, 255, 255, .55); cursor: pointer;
+      font-family: 'Huninn', 'Noto Sans TC', sans-serif;
+      font-size: 12.5px; line-height: 1; color: #6B553A;
+    }
+    #s5-card-x:hover { background: #fff; color: #2E2A24; }
+    #s5-card-x:focus-visible { outline: 2px solid #8A6A2A; outline-offset: 2px; }
+
+    .s5-key {
+      margin: 2px 0 7px; padding-right: 34px;
+      font-family: 'Lato', 'Huninn', sans-serif;
+      font-size: 10.5px; font-weight: 700; letter-spacing: .20em;
+      text-transform: uppercase; color: #9A7B3E;
+    }
+    .s5-ttl {
+      margin: 0 0 10px; padding-right: 18px;
+      font-family: 'Huninn', 'Noto Sans TC', sans-serif;
+      font-size: clamp(18px, 2.3vw, 22px); font-weight: 400; line-height: 1.34;
+      letter-spacing: .02em; color: #2E2A24;
+    }
+    .s5-body {
+      margin: 0 0 15px;
+      font-family: 'Huninn', 'Noto Sans TC', sans-serif;
+      font-size: 14px; line-height: 1.88; letter-spacing: .015em;
+      color: rgba(46, 42, 36, .84);
+    }
+    .s5-body:empty { display: none; }
+
+    #s5-quiz { margin-top: 2px; }
+    #s5-quiz[hidden] { display: none; }
+    /* A main station asks two questions, so the card has to say which of
+       the two you are on. A side trip asks one and this line stays empty,
+       which is why it collapses rather than leaving a gap. */
+    .s5-step {
+      margin: 13px 0 7px; padding-top: 13px;
+      border-top: 1px solid rgba(96, 74, 40, .20);
+      font-family: 'Lato', sans-serif;
+      font-size: 10px; font-weight: 700; letter-spacing: .20em;
+      text-transform: uppercase; color: #9A7A4E;
+    }
+    .s5-step:empty { display: none; }
+    .s5-step:not(:empty) + .s5-q { padding-top: 0; border-top: 0; }
+    .s5-q {
+      margin: 0 0 11px; padding-top: 13px;
+      border-top: 1px solid rgba(96, 74, 40, .20);
+      font-family: 'Huninn', 'Noto Sans TC', sans-serif;
+      font-size: 14px; line-height: 1.7; color: #3A3228;
+    }
+    #s5-opts { display: grid; gap: 8px; }
+    .s5-opt {
+      display: block; width: 100%; box-sizing: border-box;
+      padding: 11px 14px; text-align: left; cursor: pointer;
+      border: 1px solid rgba(96, 74, 40, .30); border-radius: 3px;
+      background: rgba(255, 255, 255, .55);
+      font-family: 'Huninn', 'Noto Sans TC', sans-serif;
+      font-size: 13.5px; line-height: 1.6; color: #3A3228;
+      transition: background .2s ease, border-color .2s ease, transform .2s ease;
+    }
+    .s5-opt:hover:not(:disabled) {
+      background: #fff; border-color: rgba(96, 74, 40, .55); transform: translateX(2px);
+    }
+    .s5-opt:focus-visible { outline: 2px solid #8A6A2A; outline-offset: 2px; }
+    .s5-opt:disabled { cursor: default; }
+    .s5-opt.is-right {
+      border-color: #4F7A52; background: rgba(79, 122, 82, .12); color: #2E4A30;
+    }
+    .s5-opt.is-wrong {
+      border-color: #A6655A; background: rgba(166, 101, 90, .10); color: #6E3A32;
+    }
+    .s5-verdict {
+      margin: 11px 0 0; min-height: 1px;
+      font-family: 'Huninn', 'Noto Sans TC', sans-serif;
+      font-size: 13px; line-height: 1.74; color: #5A4A32;
+    }
+    .s5-verdict:empty { display: none; }
+
+    #s5-card-go {
+      margin: 15px 0 0; padding: 10px 18px;
+      border: 1px solid rgba(96, 74, 40, .34); border-radius: 999px;
+      background: #2E2A24; color: #FBF5E8; cursor: pointer;
+      font-family: 'Huninn', 'Noto Sans TC', sans-serif;
+      font-size: 13px; letter-spacing: .06em;
+      transition: background .2s ease, transform .2s ease;
+    }
+    #s5-card-go:hover { background: #46402F; transform: translateY(-1px); }
+    #s5-card-go:focus-visible { outline: 2px solid #8A6A2A; outline-offset: 2px; }
+    #s5-card-go[hidden] { display: none; }
+
+    /* ---------------- the twelve cards ---------------- */
+    #s5-gal {
+      position: fixed; inset: 0; z-index: 24;
+      /* The column is stated rather than left to the content. With only
+         place-items the grid track takes its width from what is in it, the
+         percentage below then resolves against that track rather than
+         against the phone, and the whole gallery came out 860 pixels wide
+         on a 390 pixel screen. */
+      display: grid; grid-template-columns: min(860px, 100%); justify-content: center;
+      align-items: start;
+      padding: max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
+      box-sizing: border-box;
+      background: rgba(30, 24, 16, .62);
+      -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
+      opacity: 0; visibility: hidden; pointer-events: none;
+      transition: opacity .6s ease, visibility 0s linear .6s;
+      overflow-y: auto;
+    }
+    #s5-gal.is-in {
+      opacity: 1; visibility: visible; pointer-events: auto;
+      transition: opacity .6s ease, visibility 0s;
+    }
+    #s5-gal-in {
+      position: relative; width: 100%;
+      box-sizing: border-box; padding: 26px 24px 22px;
+      border-radius: 6px; border: 9px solid #FFFDF8;
+      background: #F7EFDD;
+      box-shadow: 0 28px 70px -20px rgba(0, 0, 0, .6);
+      transform: translateY(14px);
+      transition: transform .6s cubic-bezier(.22, .9, .3, 1);
+    }
+    #s5-gal.is-in #s5-gal-in { transform: translateY(0); }
+    #s5-gal-x {
+      position: absolute; top: 10px; right: 10px;
+      width: 31px; height: 31px; padding: 0; z-index: 2;
+      border: 1px solid rgba(96, 74, 40, .28); border-radius: 50%;
+      background: rgba(255, 255, 255, .6); cursor: pointer;
+      font-family: 'Huninn', 'Noto Sans TC', sans-serif;
+      font-size: 12.5px; line-height: 1; color: #6B553A;
+    }
+    #s5-gal-x:hover { background: #fff; color: #2E2A24; }
+    #s5-gal-x:focus-visible { outline: 2px solid #8A6A2A; outline-offset: 2px; }
+    #s5-gal-t {
+      margin: 0 40px 5px 0;
+      font-family: 'Huninn', 'Noto Sans TC', sans-serif;
+      font-size: clamp(19px, 2.6vw, 24px); font-weight: 400; letter-spacing: .03em;
+      color: #2E2A24;
+    }
+    #s5-gal-s {
+      margin: 0 0 16px;
+      font-family: 'Huninn', 'Noto Sans TC', sans-serif;
+      font-size: 13px; line-height: 1.8; color: rgba(46, 42, 36, .74);
+    }
+
+    #s5-stage {
+      position: relative; display: grid; place-items: center;
+      margin-bottom: 14px;
+    }
+    #s5-shot {
+      display: block; width: 100%; height: auto; border-radius: 2px;
+      background: rgba(0, 0, 0, .05);
+      box-shadow: 0 10px 30px -12px rgba(62, 44, 20, .55);
+      aspect-ratio: 1800 / 1208;
+      object-fit: cover;
+      /* the one thing that makes a long press offer "save image" */
+      -webkit-touch-callout: default;
+    }
+    .s5-arrow {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 40px; height: 40px; padding: 0; z-index: 2;
+      border: 1px solid rgba(96, 74, 40, .22); border-radius: 50%;
+      background: rgba(255, 253, 248, .88); cursor: pointer;
+      font-family: 'Lato', sans-serif; font-size: 22px; line-height: 1; color: #4A3C28;
+      box-shadow: 0 4px 14px -6px rgba(62, 44, 20, .5);
+    }
+    .s5-arrow:hover { background: #fff; }
+    .s5-arrow:focus-visible { outline: 2px solid #8A6A2A; outline-offset: 2px; }
+    #s5-prev { left: -14px; }
+    #s5-next { right: -14px; }
+
+    #s5-thumbs {
+      display: grid; grid-auto-flow: column; gap: 8px;
+      overflow-x: auto; padding-bottom: 6px; margin-bottom: 20px;
+      scrollbar-width: thin;
+    }
+    .s5-thumb {
+      width: 84px; height: 56px; padding: 0; flex: none; cursor: pointer;
+      border: 2px solid transparent; border-radius: 3px;
+      background-size: cover; background-position: center;
+      opacity: .72; transition: opacity .2s ease, border-color .2s ease, transform .2s ease;
+    }
+    .s5-thumb:hover { opacity: 1; transform: translateY(-2px); }
+    .s5-thumb[aria-selected="true"] { opacity: 1; border-color: #2E2A24; }
+    .s5-thumb:focus-visible { outline: 2px solid #8A6A2A; outline-offset: 2px; }
+
+    #s5-dl-row { display: grid; gap: 9px; }
+    #s5-dl {
+      justify-self: start; display: inline-block; cursor: pointer;
+      padding: 12px 24px; border-radius: 999px;
+      background: #2E2A24; color: #FBF5E8; text-decoration: none;
+      font-family: 'Huninn', 'Noto Sans TC', sans-serif;
+      font-size: 13.5px; letter-spacing: .06em;
+      transition: background .2s ease, transform .2s ease;
+    }
+    #s5-dl:hover { background: #46402F; transform: translateY(-1px); }
+    #s5-dl:focus-visible { outline: 2px solid #8A6A2A; outline-offset: 3px; }
+    #s5-dl-note {
+      margin: 0;
+      font-family: 'Huninn', 'Noto Sans TC', sans-serif;
+      font-size: 12px; line-height: 1.7; color: rgba(46, 42, 36, .64);
+    }
+
+    @media (max-width: 620px) {
+      #s5-gal-in { padding: 22px 16px 18px; border-width: 7px; }
+      #s5-prev { left: -8px; } #s5-next { right: -8px; }
+      .s5-arrow { width: 34px; height: 34px; font-size: 19px; }
+      .s5-seal { right: -8px; bottom: -6px; }
+    }
+
+    /* Anyone who asked not to be shown movement keeps the chapter and loses
+       the fidgeting: no breathing glow, no tilt, no stamp flying in. The
+       paper itself still drifts, at under half strength, because that is
+       handled once for the whole piece in the renderer. */
+    @media (prefers-reduced-motion: reduce) {
+      .s5-hot.is-done .s5-seal { animation: none; opacity: 1; transform: rotate(-7deg); }
+      .s5-slot.is-on { animation: none; }
+      #s5-card, #s5-gal-in { transition-duration: .01s; }
+    }

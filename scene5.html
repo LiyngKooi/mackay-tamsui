@@ -1,0 +1,166 @@
+  <!-- ================= Scene 5 · 尋蹤（手繪活點地圖） =================
+       The last chapter is a folded paper map, and a map is a different kind
+       of picture from the five before it. Those are places you stand in and
+       turn your head inside, so the renderer fits them the short way round
+       and crops whatever hangs off the other axis. You cannot crop a map:
+       the whole sheet has to be on the screen at once, both ends included,
+       because looking across it is the entire point. That is what the
+       renderer's contain fit is for, and this is the only chapter that asks
+       for it.
+
+       Everything that moves on the paper moves inside the paper, out of the
+       mask: the eleven buildings hopping on their own clocks, the little
+       sailboat riding on its waterline, and the four drawn stars. Nothing
+       is laid over the artwork except what is not part of it: the warm
+       light at the way in to each place, the seal once a place is finished,
+       and what the map does when you have been everywhere.
+
+       There are no drawn footprints here any more. The artwork has its own,
+       painted pale into the paper by hand, and the ones this file used to
+       lay on top in dark brown sat across the clinic's name and across the
+       buildings themselves. Two sets of footprints on one map is one set
+       too many, and the hand painted set was the better of the two.
+
+       The canvas sits inside #s5 rather than out at the foot of the body.
+       The earlier chapters put theirs outside because they blend as screen,
+       and a stacked element isolates blending; this one composites normally,
+       because the paper is cream at 223 levels and light added to something
+       that pale does nothing at all. Brown ink on cream reads. Light on
+       cream does not. -->
+  <div id="s5" aria-label="馬偕走過的淡水：手繪地圖與十一處足跡">
+    <canvas id="traces-fx-canvas" aria-hidden="true"></canvas>
+    <!-- The eleven buildings and the two birds are built in the script from
+         one list, because eleven near identical lines of markup is eleven
+         chances to mistype an id, and the list has to exist in the script
+         anyway to say where each one sits on the sheet. -->
+  </div>
+
+  <!-- ================= the watercolour the seals are printed with =========
+       One set of filters for every seal on the page, rather than one set
+       per seal. A filter in a defs block is never drawn; it is only
+       referred to, so sixteen seals sharing four of these costs four.
+
+       Four and not one because feTurbulence with the same seed makes the
+       same noise, and sixteen seals carrying an identical wobble read as
+       sixteen copies of a printed sticker rather than sixteen impressions
+       of a rubber stamp. Each seal picks one of the four from its own
+       name, so a given seal always comes out the same way.
+
+       The mask is the second half of what makes it look like ink: the
+       turbulence moves the edge about, and the gradient underneath takes
+       the colour down a fifth across the middle of the impression, which
+       is where a real stamp runs dry. -->
+  <svg id="s5-ink" aria-hidden="true" focusable="false"><defs>
+    <filter id="s5-wc-0" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.065" numOctaves="3" seed="3" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="3.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="s5-wc-1" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.065" numOctaves="3" seed="11" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="3.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="s5-wc-2" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.065" numOctaves="3" seed="19" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="3.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="s5-wc-3" x="-30%" y="-30%" width="160%" height="160%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.065" numOctaves="3" seed="27" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="3.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+
+    <linearGradient id="s5-wg-0" x1="0.05" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="1"/>
+      <stop offset="0.42" stop-color="#fff" stop-opacity="0.78"/>
+      <stop offset="0.74" stop-color="#fff" stop-opacity="0.96"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0.84"/>
+    </linearGradient>
+    <linearGradient id="s5-wg-1" x1="1" y1="0.1" x2="0" y2="0.95">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.92"/>
+      <stop offset="0.36" stop-color="#fff" stop-opacity="0.74"/>
+      <stop offset="0.68" stop-color="#fff" stop-opacity="1"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0.8"/>
+    </linearGradient>
+    <linearGradient id="s5-wg-2" x1="0.2" y1="1" x2="0.8" y2="0">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.86"/>
+      <stop offset="0.5" stop-color="#fff" stop-opacity="0.72"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="1"/>
+    </linearGradient>
+    <linearGradient id="s5-wg-3" x1="0" y1="0.8" x2="1" y2="0.2">
+      <stop offset="0" stop-color="#fff" stop-opacity="1"/>
+      <stop offset="0.3" stop-color="#fff" stop-opacity="0.8"/>
+      <stop offset="0.62" stop-color="#fff" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0.76"/>
+    </linearGradient>
+
+    <mask id="s5-wm-0" maskContentUnits="objectBoundingBox"><rect width="1" height="1" fill="url(#s5-wg-0)"/></mask>
+    <mask id="s5-wm-1" maskContentUnits="objectBoundingBox"><rect width="1" height="1" fill="url(#s5-wg-1)"/></mask>
+    <mask id="s5-wm-2" maskContentUnits="objectBoundingBox"><rect width="1" height="1" fill="url(#s5-wg-2)"/></mask>
+    <mask id="s5-wm-3" maskContentUnits="objectBoundingBox"><rect width="1" height="1" fill="url(#s5-wg-3)"/></mask>
+  </defs></svg>
+
+  <p id="s5-hint" role="status"></p>
+
+  <!-- How far along the walk you are: a slip of paper torn by hand, with
+       five empty rings on it. The empty rings are the point, because "three
+       of five" says nothing about which three, and a stamp collector's page
+       always shows the gaps.
+
+       Two sheets rather than one. The lower is kraft and the upper is a
+       paler washi torn slightly differently, which is what gives the edge
+       its depth; one sheet with a border drawn round it reads as a label
+       printed on a map rather than a piece of paper left on top of it.
+
+       The five rings are the main line. The six side trips are counted on
+       the second line in words, because six more rings on a slip this size
+       would turn a keepsake into a dashboard. -->
+  <div id="s5-prog" aria-live="polite" aria-hidden="true">
+    <div id="s5-prog-paper">
+      <div id="s5-prog-text">
+        <p id="s5-prog-t"></p>
+        <p id="s5-prog-en"></p>
+        <p id="s5-prog-badge" hidden></p>
+      </div>
+      <div id="s5-prog-slots" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <div id="s5-card" role="dialog" aria-labelledby="s5-card-t" aria-hidden="true">
+    <span class="s5-tape" aria-hidden="true"></span>
+    <button id="s5-card-x" type="button"><span aria-hidden="true">閉</span></button>
+    <p class="s5-key" id="s5-card-k"></p>
+    <h2 class="s5-ttl" id="s5-card-t"></h2>
+    <p class="s5-body" id="s5-card-b"></p>
+    <div id="s5-quiz">
+      <p class="s5-step" id="s5-card-s"></p>
+      <p class="s5-q" id="s5-card-q"></p>
+      <div id="s5-opts"></div>
+      <p class="s5-verdict" id="s5-card-v" role="status"></p>
+    </div>
+    <button id="s5-card-go" type="button"></button>
+  </div>
+
+  <!-- The twelve cards, handed over exactly as they were painted. -->
+  <div id="s5-gal" role="dialog" aria-labelledby="s5-gal-t" aria-hidden="true">
+    <div id="s5-gal-in">
+      <button id="s5-gal-x" type="button"><span aria-hidden="true">閉</span></button>
+      <h2 id="s5-gal-t"></h2>
+      <p id="s5-gal-s"></p>
+
+      <div id="s5-stage">
+        <button class="s5-arrow" id="s5-prev" type="button"><span aria-hidden="true">‹</span></button>
+        <!-- The composite, as an image rather than a canvas. A canvas cannot
+             be long pressed and saved, and in Taiwan a great many people
+             will open this inside LINE or Instagram, where the download
+             attribute is ignored and long press is the only way out. -->
+        <img id="s5-shot" alt="" draggable="false">
+        <button class="s5-arrow" id="s5-next" type="button"><span aria-hidden="true">›</span></button>
+      </div>
+
+      <div id="s5-thumbs" role="tablist"></div>
+
+      <div id="s5-dl-row">
+        <a id="s5-dl" download></a>
+        <p id="s5-dl-note"></p>
+      </div>
+    </div>
+  </div>
