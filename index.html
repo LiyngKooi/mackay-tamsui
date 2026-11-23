@@ -2356,6 +2356,27 @@
       -webkit-tap-highlight-color: transparent;
     }
     .s5-hot:focus-visible { outline: 2px solid #8A6A2A; outline-offset: 3px; }
+    /* A station the walk has not reached takes no press. The paling
+       is the shader's; this only stops the hit box answering. */
+    .s5-hot.is-locked { cursor: default; }
+    .s5-hot.is-locked:focus-visible { outline: none; }
+
+    /* The empty slots are buttons now, so they look pressable without
+       becoming one: the paper lifts a shade, nothing outlines. */
+    .s5-slot.is-ask {
+      border: 0; padding: 0; background: transparent;
+      cursor: pointer; appearance: none; -webkit-appearance: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform .22s cubic-bezier(.2, 1.3, .4, 1), filter .22s ease;
+    }
+    .s5-slot.is-ask:hover { transform: rotate(-3deg) scale(1.1); filter: brightness(1.06); }
+    .s5-slot:nth-child(2n).is-ask:hover { transform: rotate(2.5deg) scale(1.1); }
+    .s5-slot.is-ask:focus-visible { outline: 2px solid #8A6A2A; outline-offset: 2px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .s5-slot.is-ask { transition: none; }
+      .s5-slot.is-ask:hover { transform: rotate(-3deg); }
+    }
 
     /* A reach of at least 44 pixels both ways, laid over the drawn mark
        rather than around it, so the little bird on the far left can be
@@ -2712,6 +2733,52 @@
     }
     #s5-gal-x:hover { background: #fff; color: #2E2A24; }
     #s5-gal-x:focus-visible { outline: 2px solid #8A6A2A; outline-offset: 2px; }
+
+    /* ---------------- the cross on the round close buttons ----------------
+       Chapter five's card and chapter six's card and gallery. The chops in
+       the earlier chapters are squares with a word in them and are not
+       this.
+
+       The cross is drawn rather than typed. A glyph is positioned off a
+       baseline and a baseline is not the middle of a circle, so a spun
+       character wobbles; two line segments in a viewBox have their centre
+       where the circle's centre is and stay there. On hover it turns a
+       quarter turn, through the plus and back to the cross, on an easing
+       that overshoots a little so it arrives rather than stops. */
+    #s5-card-x, #s5-gal-x, #s4-card-x {
+      display: grid; place-items: center;
+      line-height: 0;
+    }
+    .x-mark {
+      display: block;
+      width: 16px; height: 16px;
+      overflow: visible;
+      transform: rotate(0deg);
+      transform-origin: center;
+      transition: transform .42s cubic-bezier(.22, 1.25, .36, 1);
+    }
+    #s5-card-x:hover .x-mark, #s5-gal-x:hover .x-mark, #s4-card-x:hover .x-mark,
+    #s5-card-x:focus-visible .x-mark, #s5-gal-x:focus-visible .x-mark,
+    #s4-card-x:focus-visible .x-mark { transform: rotate(90deg); }
+    /* Touch has no hover to lean on, so the press itself carries it: the
+       same quarter turn with the button giving way under the finger. */
+    #s5-card-x:active .x-mark, #s5-gal-x:active .x-mark, #s4-card-x:active .x-mark {
+      transform: rotate(90deg) scale(.92);
+    }
+    /* The paper lifts a shade under the pointer as well, which the colour
+       rules each button already carries then deepen. */
+    #s5-card-x:hover, #s5-gal-x:hover { border-color: rgba(96, 74, 40, .52); }
+    #s4-card-x:hover { border-color: rgba(255, 222, 162, .48); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .x-mark { transition-duration: .01ms; }
+      #s5-card-x:hover .x-mark, #s5-gal-x:hover .x-mark, #s4-card-x:hover .x-mark,
+      #s5-card-x:focus-visible .x-mark, #s5-gal-x:focus-visible .x-mark,
+      #s4-card-x:focus-visible .x-mark,
+      #s5-card-x:active .x-mark, #s5-gal-x:active .x-mark, #s4-card-x:active .x-mark {
+        transform: none;
+      }
+    }
     #s5-gal-t {
       margin: 0 40px 5px 0;
       font-family: 'Huninn', 'Noto Sans TC', sans-serif;
@@ -3171,7 +3238,7 @@
   <p id="s4-hint" role="status"></p>
 
   <div id="s4-card" role="dialog" aria-labelledby="s4-card-t" aria-hidden="true">
-    <button id="s4-card-x" type="button"><span aria-hidden="true">閉</span></button>
+    <button id="s4-card-x" type="button" aria-label="關閉卡片"><svg class="x-mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.8 4.8 19.2 19.2M19.2 4.8 4.8 19.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg></button>
     <p class="s4-key" id="s4-card-k"></p>
     <h2 class="s4-ttl" id="s4-card-t"></h2>
     <p class="s4-body" id="s4-card-b"></p>
@@ -3251,7 +3318,7 @@
 
   <div id="s5-card" role="dialog" aria-labelledby="s5-card-t" aria-hidden="true">
     <span class="s5-tape" aria-hidden="true"></span>
-    <button id="s5-card-x" type="button"><span aria-hidden="true">閉</span></button>
+    <button id="s5-card-x" type="button" aria-label="關閉卡片"><svg class="x-mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.8 4.8 19.2 19.2M19.2 4.8 4.8 19.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg></button>
     <!-- When a place that has already been finished is opened again, its
          own seal is pressed into the corner of the card in place of the
          answers. The story is still there to read; what is gone is the
@@ -3272,7 +3339,7 @@
   <!-- The twelve cards, handed over exactly as they were painted. -->
   <div id="s5-gal" role="dialog" aria-labelledby="s5-gal-t" aria-hidden="true">
     <div id="s5-gal-in">
-      <button id="s5-gal-x" type="button"><span aria-hidden="true">閉</span></button>
+      <button id="s5-gal-x" type="button" aria-label="關閉"><svg class="x-mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.8 4.8 19.2 19.2M19.2 4.8 4.8 19.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg></button>
       <h2 id="s5-gal-t"></h2>
       <p id="s5-gal-s"></p>
 
@@ -3361,6 +3428,10 @@
     boatGo:  {value:0.0   },  /* the boat sliding on down the river    */
     shake:   {value:0.0   },  /* a seal landing, felt through the map  */
     boat:  { value: 0.0   },  /* the sailboat riding on the river     */
+    mainPack:{value:0.0   },  /* which of the first six are main stops*/
+    mainPack2:{value:0.0  },  /* and which of the last five           */
+    openWho: {value:-1.0  },  /* the station the walk has reached      */
+    openAmt: {value:1.0   },  /* and how far it has developed          */
   };
 
   const mat = new THREE.ShaderMaterial({
@@ -3372,6 +3443,7 @@
       uniform float disp, glint, gf, gsharp, swell, pan, heel, warm, wind, cloud,
               cdrift, fit, spark, lift, liftHot, liftAmt, liftDone, liftDone2,
               eggWho, eggAmt, boatGo, shake,
+              mainPack, mainPack2, openWho, openAmt,
               boat;
       varying vec2 vUv;
 
@@ -3607,6 +3679,33 @@
         }
 
         vec3 c = texture2D(map, w).rgb;
+
+        /* ---- the stations still to come ----
+           A main station the walk has not reached is held back as a
+           watermark: most of its colour taken out and what is left washed
+           towards the paper, so it reads as a drawing that has not
+           developed rather than as something switched off. Side trips,
+           the small illustrations and anything already finished keep
+           their colour; only the main line waits its turn.
+
+           The station the walk has just reached comes forward on its own
+           through openAmt, so the map develops one building at a time
+           instead of all at once. */
+        if (onPaper > 0.5 && who < 11.5) {
+          float idx2  = who <= 6.0 ? who : who - 6.0;
+          float mpack = who <= 6.0 ? mainPack : mainPack2;
+          float dpack = who <= 6.0 ? liftDone : liftDone2;
+          float p2    = pow(2.0, idx2 - 1.0);
+          float isMain = mod(floor(mpack / p2), 2.0);
+          float isDone = mod(floor(dpack / p2), 2.0);
+          float hold = isMain * (1.0 - isDone);
+          if (abs(mk.g - openWho) < 0.02) hold *= 1.0 - openAmt;
+          if (hold > 0.0) {
+            float gl = dot(c, vec3(0.299, 0.587, 0.114));
+            vec3 pale = mix(vec3(gl), vec3(0.961, 0.933, 0.871), 0.52);
+            c = mix(c, pale, 0.72 * hold);
+          }
+        }
 
         /* Open water is a smooth gradient, and sliding a smooth gradient by a
            pixel changes almost nothing. Real water announces itself through
@@ -7214,7 +7313,7 @@ function renderWatercolorStamp(text, tone, opts) {
                    b: '1901 年 6 月 2 日，他因喉癌病逝於淡水的住所。遺體葬在今天淡江中學的校園裡，妻子張聰明與子女後來也葬在他身旁。從 1872 年 3 月 9 日在滬尾上岸算起，他在這裡待了二十九年，中間只為述職短暫回過加拿大兩次。',
                    s: '' },
         next: '前往下一章 · 尋蹤 ▸',
-        close: '閉', closeAria: '關閉卡片',
+        closeAria: '關閉卡片',
         aria: { lantern: '煤油提燈與翻開的書本', obelisk: '馬偕紀念碑', cat: '石階上的小花貓' },
       },
       en: {
@@ -7223,7 +7322,7 @@ function renderWatercolorStamp(text, tone, opts) {
                    b: 'He died of throat cancer at his house in Tamsui on 2 June 1901. He is buried on the grounds of what is now Tamkang High School, and his wife Tiu Chhang-mia and their children were later laid beside him. Counting from the day he landed, 9 March 1872, he had been here twenty-nine years, broken only by two short furloughs in Canada.',
                    s: '' },
         next: 'Next chapter · Traces ▸',
-        close: 'x', closeAria: 'Close card',
+        closeAria: 'Close card',
         aria: { lantern: 'The oil lamp and the open book', obelisk: "Mackay's monument",
                 cat: 'The cat on the stone step' },
       },
@@ -7764,7 +7863,6 @@ function renderWatercolorStamp(text, tone, opts) {
       nextB.textContent = T4[lang4].next;
       nextB.classList.toggle('is-on', id === 'obelisk');
       cardX.setAttribute('aria-label', T4[lang4].closeAria);
-      cardX.firstElementChild.textContent = T4[lang4].close;
       card.setAttribute('aria-hidden', 'false');
       card.classList.add('is-in');
       lastFocus = document.activeElement;
@@ -8147,6 +8245,144 @@ function renderWatercolorStamp(text, tone, opts) {
     const NAMES = 17;
     const PHASE = {};  PLACES.forEach(key => { PHASE[key] = NO[key] / NAMES; });
 
+    /* ---------------- the walk, one station at a time ----------------
+       Which station is open is worked out from what has been finished
+       rather than kept in a variable of its own, so it cannot drift out of
+       step with the seals: it is the first main station without a seal.
+       The other main stations are held back, the six side trips and the
+       six illustrations are not. */
+    function stageIndex() {
+      for (let i = 0; i < MAIN.length; i++) if (!done[MAIN[i]]) return i;
+      return MAIN.length;
+    }
+    function stationNow() {
+      const i = stageIndex();
+      return i < MAIN.length ? MAIN[i] : null;
+    }
+    function locked(key) {
+      return MAIN.indexOf(key) >= 0 && !done[key] && key !== stationNow();
+    }
+
+    /* Which of the eleven are main stations, as bits, in the same two
+       halves liftDone uses and for the same reason: eleven bits in one
+       float is a value up to 2047, and a fragment shader that has fallen
+       back to medium precision is only promised ten bits of integer. */
+    function pushMain() {
+      if (!window.__set) return;
+      let a = 0, b = 0;
+      MAIN.forEach(key => {
+        const n = NO[key];
+        if (n <= 6) a += Math.pow(2, n - 1);
+        else        b += Math.pow(2, n - 7);
+      });
+      window.__set('mainPack', a);
+      window.__set('mainPack2', b);
+    }
+
+    /* openAmt is how far the open station has developed. One means it is
+       all the way out, which is what it is on arrival and after the
+       footprints have been; the only time it is anything else is while a
+       building is coming forward. */
+    let openAmt = 1, openFrom = 0, openT = -1;
+    function pushOpen(amt) {
+      if (!window.__set) return;
+      const key = stationNow();
+      window.__set('openWho', key ? PHASE[key] : -1);
+      window.__set('openAmt', amt);
+    }
+    /* Bring the open station into view. The sheet is wider than a phone
+       screen, and on one the first station sits off the left edge: the
+       only signpost this chapter has and the only building that answers a
+       press would both be somewhere the visitor cannot see. Dragging
+       still works; this only means they do not have to guess which way.
+
+       The pan is worked out from mapView's own arithmetic, where the
+       screen x of a fraction is W/2 + (fx - 0.5 + pan) * IW * k, so
+       centring fx wants pan = 0.5 - fx. */
+    let panTo = null, panFrom = 0, panT = 0;
+    function bringIntoView(key, smooth) {
+      if (!key || whole || panRange() === 0) return;
+      const b = HOT[key];
+      const m = panRange();
+      const want = Math.max(-m, Math.min(m, 0.5 - (b[0] + b[2]) / 2));
+      if (Math.abs(want - pan) < 0.002) return;
+      if (!smooth || reduce) { setPan(want); panTo = null; return; }
+      panFrom = pan; panTo = want; panT = 0;
+      wake();
+    }
+
+    function paintLocks() {
+      pushMain();
+      openAmt = 1; openT = -1;
+      pushOpen(1);
+      bringIntoView(stationNow(), false);
+      PLACES.forEach(key => {
+        const el = hot[key]; if (!el) return;
+        const off = locked(key);
+        el.classList.toggle('is-locked', off);
+        el.setAttribute('aria-disabled', off ? 'true' : 'false');
+        el.tabIndex = off ? -1 : 0;
+      });
+      pinStop();
+    }
+
+    /* ---------------- the tag over the open station ----------------
+       The chapter already had a torn scrap of paper for the small
+       illustrations to speak through. It is the only signpost now, so it
+       stays put over whichever station is open rather than timing out, and
+       it has to be put back wherever the map is dragged to. */
+    let pinned = null;
+    function pinStop() {
+      const key = stationNow();
+      if (!key || !sayEl) { pinned = null; if (sayEl) sayEl.classList.remove('is-in'); return; }
+      const b = HOT[key], t = T5[lang5];
+      pinned = { text: t.stop(stageIndex() + 1, t.st[key].t), fx: (b[0] + b[2]) / 2, fy: b[1] };
+      sayAt(pinned.text, pinned.fx, pinned.fy, true);
+    }
+    function repinStop() {
+      if (!pinned || !sayEl) return;
+      sayEl.style.left = SX(pinned.fx) + 'px';
+      sayEl.style.top = SY(pinned.fy) + 'px';
+    }
+
+    /* ---------------- the footprints ----------------
+       A line of prints from the station just finished to the next one,
+       appearing one after another as if somebody were walking it. The map
+       is already drawn with painted footprints, which is where the idea
+       and the shape come from. */
+    let trail = null;
+    function walkTo(fromKey, toKey) {
+      const a = HOT[fromKey], b = HOT[toKey];
+      trail = {
+        x0: (a[0] + a[2]) / 2, y0: a[3] - 0.012,
+        x1: (b[0] + b[2]) / 2, y1: b[3] - 0.012,
+        t: 0, max: 1.5, n: 9, arrived: false,
+      };
+      wake();
+    }
+    function develop() {
+      /* The building comes forward over six tenths of a second and takes
+         one small rise through the same spring a finger uses, so arriving
+         feels like the map answering rather than a layer being switched. */
+      const key = stationNow();
+      if (!key) return;
+      /* Anyone who asked not to be shown movement gets the building, not
+         the developing: it is there, in full colour, in the same frame. */
+      if (reduce) {
+        openAmt = 1; openT = -1;
+        pushOpen(1);
+        pinStop();
+        wake();
+        return;
+      }
+      openFrom = 0; openAmt = 0; openT = 0;
+      pushOpen(0);
+      setHot(key); hotV = 6.5;
+      setTimeout(() => { if (hotKey === key) setHot(null); }, 850);
+      pinStop();
+      wake();
+    }
+
     /* How brightly a building is lit at a given moment.
 
        A breath rather than a pulse: three and a half seconds in and out,
@@ -8193,10 +8429,10 @@ function renderWatercolorStamp(text, tone, opts) {
 
     const T5 = {
       zh: {
-        hint: '點地圖上發亮的建築，收集五枚主線印章',
-        hintDrag: '左右拖曳看地圖　點發亮的建築，收集五枚主線印章',
+        hint: '跟隨手撕和紙標籤的指引，依序點擊亮起的建築收集 5 枚足跡印章',
+        hintDrag: '左右拖曳看地圖　跟隨和紙標籤的指引，依序點擊亮起的建築收集 5 枚足跡印章',
         prog: '馬偕足跡收集',
-        close: '閉', closeAria: '關閉卡片',
+        closeAria: '關閉卡片',
         take: '收下印章', takeSide: '收下見聞郵戳',
         ok: '知道了',
         right: '答對了。',
@@ -8208,6 +8444,10 @@ function renderWatercolorStamp(text, tone, opts) {
         step: function (i, n) { return '第 ' + i + ' 題，共 ' + n + ' 題'; },
         tally: function (m, s) {
           return "MACKAY'S FOOTPRINTS · 主線 " + m + '/5 ｜ 支線探索 ' + s + '/6';
+        },
+        find: function () { return '點一下，在地圖上指出目前這一站'; },
+        stop: function (n, name) {
+          return '第' + ['一', '二', '三', '四', '五'][n - 1] + '站 · ' + name;
         },
         gal: {
           t: '馬偕紀念明信片',
@@ -8323,10 +8563,10 @@ function renderWatercolorStamp(text, tone, opts) {
         },
       },
       en: {
-        hint: 'Press the buildings that glow. Five seals to collect.',
-        hintDrag: 'Drag the map sideways. Press the buildings that glow, five seals to collect.',
+        hint: 'Follow the paper tag and tap the illuminated landmark to collect 5 MacKay seals',
+        hintDrag: 'Drag the map sideways, then follow the paper tag to collect 5 MacKay seals',
         prog: 'Seals collected',
-        close: 'x', closeAria: 'Close card',
+        closeAria: 'Close card',
         take: 'Take the seal', takeSide: 'Take the mark',
         ok: 'Got it',
         right: 'That is right.',
@@ -8339,6 +8579,8 @@ function renderWatercolorStamp(text, tone, opts) {
         tally: function (m, s) {
           return "MACKAY'S FOOTPRINTS · Seals " + m + '/5 | Exploration ' + s + '/6';
         },
+        find: function () { return 'Tap to point out the stop you are on.'; },
+        stop: function (n, name) { return 'Stop ' + n + ' \u00B7 ' + name; },
         gal: {
           t: 'Mackay memorial postcards',
           s: 'Pick any of the twelve. What you download is the card itself, whole.',
@@ -8577,13 +8819,20 @@ function renderWatercolorStamp(text, tone, opts) {
       window.__set('boat', BOAT_PX / px);
     }
 
-    function setPan(v) {
+    /* Split in two. Everything but the repaint is wanted on its own by
+       the pan tween, which runs inside a frame and would send setPan
+       straight back into paint if it called this whole thing. */
+    function panQuiet(v) {
       const m = panRange();
       pan = Math.max(-m, Math.min(m, v));
       if (window.__set) window.__set('pan', pan);
       mapView();
       pushScale();
       placeHots();
+      repinStop();
+    }
+    function setPan(v) {
+      panQuiet(v);
       paint(clock, 0);
     }
     function applyFit() {
@@ -8612,7 +8861,7 @@ function renderWatercolorStamp(text, tone, opts) {
         el.style.top    = SY(y0) + 'px';
         el.style.width  = w + 'px';
         el.style.height = h + 'px';
-        const seal = el.firstElementChild;
+        const seal = el.querySelector('.s5-seal');
         if (seal) {
           /* The seal is sized off the building it is stamped on, so a
              small house gets a small impression, with a floor under it so
@@ -8638,6 +8887,7 @@ function renderWatercolorStamp(text, tone, opts) {
        in this chapter allowed to be bouncy. The wave outside is not. */
     let hotKey = null, hotAmt = 0, hotWant = 0, hotV = 0;
     const SPRING = 240, DAMPING = 17;
+    const HOVER_LIFT = 1.35;
     let egg = null, shakeT = -1;
 
     /* Which places are finished, as bits in two numbers rather than one.
@@ -8697,22 +8947,50 @@ function renderWatercolorStamp(text, tone, opts) {
       badgeEl.textContent = all ? t.badge : '';
       slotsEl.replaceChildren();
       MAIN.forEach(key => {
-        const sp = document.createElement('span');
-        sp.className = 's5-slot' + (done[key] ? ' is-on' : '');
+        /* An earned slot is a record and sits still. An unearned one is a
+           question, and the answer is somewhere on a map that may be
+           wider than the screen, so it is a button: press it and the map
+           goes and finds the building for you. This is the end of the
+           walk, when one seal is missing and nothing says where. */
+        const got = !!done[key];
+        const sp = document.createElement(got ? 'span' : 'button');
+        sp.className = 's5-slot' + (got ? ' is-on' : ' is-ask');
+        if (!got) {
+          sp.type = 'button';
+          sp.setAttribute('aria-label', t.find());
+          sp.addEventListener('click', () => { if (active) findOnMap(); });
+        }
         const st = t.st[key];
         /* Earned or not, the slot is the same component: a stamp, or the
            shape of the stamp that is missing. A collector's page shows
            what is not there yet, not only what is. */
         stampInto(sp, st.seal, toneOf(key), { tag: 'slot', empty: !done[key] });
-        sp.title = done[key] ? st.seal2 : st.seal;
+        sp.title = got ? st.seal2 : t.find();
         slotsEl.appendChild(sp);
       });
+    }
+
+    /* Bring a building to the eye: pan to it if the map is wider than
+       the screen, then point at it. The pan is worked out from mapView's
+       own arithmetic, where the screen x of a fraction is
+       W/2 + (fx - 0.5 + pan) * IW * k, so centring fx wants pan = 0.5 - fx.
+       setPan clamps it, which is what keeps the edges of the sheet from
+       sliding into view. */
+    /* Every empty slot points at the same place, because under a walk
+       taken in order there is only one place to go. */
+    function findOnMap() {
+      const key = stationNow();
+      if (!key) return;
+      const b = HOT[key];
+      const fx = (b[0] + b[2]) / 2;
+      if (!whole && panRange() > 0) setPan(0.5 - fx);
+      beckon(key, true);
     }
 
     function paintSeals() {
       PLACES.forEach(key => {
         const el = hot[key]; if (!el) return;
-        const seal = el.firstElementChild;
+        const seal = el.querySelector('.s5-seal');
         el.classList.toggle('is-done', !!done[key]);
         if (!seal) return;
         if (done[key]) stampInto(seal, T5[lang5].st[key].seal, toneOf(key), { tag: 'map' });
@@ -8880,16 +9158,78 @@ function renderWatercolorStamp(text, tone, opts) {
            changing with it that would read as nothing at all. */
         const gw = bw * (0.44 - 0.05 * grab);
         const gh = Math.max(7, gw * 0.17);
-        ctx.globalAlpha = 0.14 + 0.06 * lamp + 0.34 * grab;
+        ctx.globalAlpha = 0.14 + 0.06 * lamp + 0.40 * grab;
         ctx.drawImage(SHADE, cx - gw, y1 - gh * 0.6, gw * 2, gh * 2);
 
-        /* and the star, up and to one side of the roof, twinkling on a
-           quicker clock of its own so the two never beat together */
-        const tw = starAt(key, t);
-        const sr = Math.max(5.5, Math.min(11, bw * 0.072)) * (0.72 + 0.46 * tw);
-        star(x0 + bw * 0.80, y0 - bh * 0.055, sr, 0.42 + 0.58 * tw, '#F4C867');
+        /* The star above the roof used to be drawn here. It is a cue
+           element now, so that one system marks every place that can be
+           pressed, the eggs included, and so that it can be held still
+           for anyone who asked not to be shown movement. Drawing it here
+           as well would have put two of the same signpost on each of the
+           five main stations. */
       }
       ctx.globalAlpha = 1;
+
+
+      /* ---- the footprints walking to the next station ---- */
+      if (trail) {
+        trail.t += dt;
+        const u = Math.min(1, trail.t / trail.max);
+        const ax = SX(trail.x0), ay = SY(trail.y0);
+        const bx = SX(trail.x1), by = SY(trail.y1);
+        const dx = bx - ax, dy = by - ay;
+        const len = Math.hypot(dx, dy) || 1;
+        const nx = -dy / len, ny = dx / len;   /* across the path */
+        const ang = Math.atan2(dy, dx);
+        for (let i = 0; i < trail.n; i++) {
+          /* Each print has its own moment, and the last of them lands a
+             quarter of the way before the end so the walk reads as
+             arriving rather than stopping dead. */
+          const at = (i + 0.5) / trail.n * 0.76;
+          const f = (u - at) / 0.16;
+          if (f <= 0) continue;
+          const a = Math.min(1, f) * (1 - 0.35 * Math.max(0, u - 0.8) / 0.2);
+          const p = (i + 0.5) / trail.n;
+          const side = (i % 2 ? 1 : -1) * Math.min(9, len * 0.016);
+          const px = ax + dx * p + nx * side;
+          const py = ay + dy * p + ny * side;
+          const sz = Math.max(3.2, Math.min(7.5, len * 0.012));
+          ctx.save();
+          ctx.translate(px, py);
+          ctx.rotate(ang + 1.5708);
+          ctx.globalAlpha = Math.max(0, Math.min(0.62, a * 0.62));
+          ctx.fillStyle = '#9A6B35';
+          ctx.beginPath();
+          ctx.ellipse(0, 0, sz * 0.58, sz, 0, 0, 6.2832);
+          ctx.fill();
+          ctx.globalAlpha = Math.max(0, Math.min(0.42, a * 0.42));
+          ctx.fillStyle = '#C79A4E';
+          ctx.beginPath();
+          ctx.ellipse(0, -sz * 0.95, sz * 0.40, sz * 0.42, 0, 0, 6.2832);
+          ctx.fill();
+          ctx.restore();
+        }
+        if (!trail.arrived && u >= 0.78) { trail.arrived = true; develop(); }
+        if (u >= 1) trail = null;
+        ctx.globalAlpha = 1;
+      }
+
+      /* ---- the map following the walk ---- */
+      if (panTo !== null) {
+        panT += dt;
+        const u = Math.min(1, panT / 0.55);
+        panQuiet(panFrom + (panTo - panFrom) * (u * u * (3 - 2 * u)));
+        if (u >= 1) panTo = null;
+      }
+
+      /* ---- a station coming forward ---- */
+      if (openT >= 0) {
+        openT += dt;
+        const u = Math.min(1, openT / 0.60);
+        openAmt = u * u * (3 - 2 * u);
+        pushOpen(openAmt);
+        if (u >= 1) { openT = -1; openAmt = 1; }
+      }
 
       /* ---- the ink ring a seal leaves when it lands ---- */
       for (let i = rings.length - 1; i >= 0; i--) {
@@ -8992,7 +9332,7 @@ function renderWatercolorStamp(text, tone, opts) {
       /* The light travelling along the buildings keeps the loop alive on
          its own, which is the point of it. */
       return bits.length > 0 || motes.length > 0 || rings.length > 0 ||
-             sparks.length > 0 || pops.length > 0 ||
+             sparks.length > 0 || pops.length > 0 || trail !== null || openT >= 0 || panTo !== null ||
              hotAmt !== hotWant || hotV !== 0 || egg !== null || shakeT >= 0 ||
              (!reduce && PLACES.some(key => !done[key]));
     }
@@ -9013,7 +9353,11 @@ function renderWatercolorStamp(text, tone, opts) {
         if (Math.abs(hotWant - hotAmt) < 0.002 && Math.abs(hotV) < 0.05) {
           hotAmt = hotWant; hotV = 0;
         }
-        if (window.__set) window.__set('liftAmt', hotAmt);
+        /* The shader lifts by three per cent of liftAmt, and the brief
+           asks for four, so the hover tops out above one. The sticker is
+           painted into the map, so this is where its scale lives; a CSS
+           transform here would scale an empty hit box. */
+        if (window.__set) window.__set('liftAmt', hotAmt * HOVER_LIFT);
         if (hotAmt === 0 && hotWant === 0) hotKey = null;
       }
       /* ---- a seal landing, felt through the sheet ----
@@ -9059,12 +9403,21 @@ function renderWatercolorStamp(text, tone, opts) {
     }
 
     /* ---------------- the hint ---------------- */
-    let hintTimer = 0;
-    function showHint(msg) {
+    let hintTimer = 0, touched = false;
+    /* hold keeps the line up until something is pressed. Seven seconds was
+       long enough to read it and not long enough to act on it: the line
+       went while the eye was still working out which building it meant. */
+    function showHint(msg, hold) {
       hintEl.textContent = msg;
       hintEl.classList.add('is-in');
       clearTimeout(hintTimer);
-      hintTimer = setTimeout(() => hintEl.classList.remove('is-in'), 7000);
+      if (!hold) hintTimer = setTimeout(() => hintEl.classList.remove('is-in'), 7000);
+    }
+    function firstTouch() {
+      if (touched) return;
+      touched = true;
+      clearTimeout(hintTimer);
+      hintEl.classList.remove('is-in');
     }
 
     /* ---------------- the cards ----------------
@@ -9101,6 +9454,8 @@ function renderWatercolorStamp(text, tone, opts) {
     }
 
     function openStation(key) {
+      if (locked(key)) return;
+      firstTouch();
       setHot(null);
       const t = T5[lang5], st = t.st[key];
       openKey = key; openKind = 'station'; step = 0;
@@ -9108,7 +9463,6 @@ function renderWatercolorStamp(text, tone, opts) {
       cardT.textContent = st.t;
       cardB.textContent = st.b;
       cardX.setAttribute('aria-label', t.closeAria);
-      cardX.firstElementChild.textContent = t.close;
       cardV.textContent = '';
 
       if (done[key]) {
@@ -9203,6 +9557,32 @@ function renderWatercolorStamp(text, tone, opts) {
     function afterAward(key) {
       if (countMain() >= MAIN.length) finish();
       else if (countMain() + countSide() >= PLACES.length) lightBanyan();
+      /* A main station just finished, so the walk moves on: the tag goes,
+         the footprints go out, and the next building develops as they
+         arrive. A side trip changes none of this. */
+      if (MAIN.indexOf(key) >= 0) {
+        pushMain();
+        const next = stationNow();
+        if (next) {
+          pinned = null;
+          if (sayEl) sayEl.classList.remove('is-in');
+          pushOpen(0);
+          bringIntoView(next, true);
+          if (reduce) develop();
+          else walkTo(key, next);
+        } else {
+          pinned = null;
+          if (sayEl) sayEl.classList.remove('is-in');
+          pushOpen(1);
+        }
+        PLACES.forEach(k => {
+          const el = hot[k]; if (!el) return;
+          const off = locked(k);
+          el.classList.toggle('is-locked', off);
+          el.setAttribute('aria-disabled', off ? 'true' : 'false');
+          el.tabIndex = off ? -1 : 0;
+        });
+      }
     }
 
     /* The gold, from the seal to its slot. The slip is pinned to the
@@ -9236,25 +9616,115 @@ function renderWatercolorStamp(text, tone, opts) {
     });
     cardX.addEventListener('click', closeCard);
 
+    /* ---------------- pointing at one place ----------------
+       An amber ring over the building, its badge swelling, and one small
+       jump of the sticker. Used when the chapter opens with nothing
+       collected, and when an empty slot on the slip is pressed. */
+    function beckon(key, jump) {
+      const el = hot[key];
+      if (!el || done[key]) return;
+      const b = HOT[key];
+      const fx = (b[0] + b[2]) / 2, fy = (b[1] + b[3]) / 2;
+      if (!reduce) {
+        /* Two rings, and both heavier than the ink ring a seal leaves.
+           That one lands in the middle of a ceremony and has the eye
+           already; this one has to catch an eye that is looking
+           somewhere else, over a watercolour map that is busy
+           everywhere. The first is bronze rather than gold, because gold
+           on cream paper is barely a change of tone. */
+        rings.push({ fx: fx, fy: fy, r0: 16, r1: 112, squash: 0.8, max: 1.00,
+                     a: 0.88, w: 4.2, ink: '#B5771A' });
+        rings.push({ fx: fx, fy: fy, r0: 11, r1: 78, squash: 0.8, max: 1.25,
+                     a: 0.62, w: 2.6, ink: '#F2D08A', t: -0.18 });
+      }
+      /* One jump, through the same spring a finger uses, so the building
+         answers the way it would to a touch rather than in some private
+         language of its own. */
+      if (jump && !reduce) {
+        setHot(key);
+        hotV = 7.5;
+        setTimeout(() => { if (hotKey === key) setHot(null); }, 900);
+      }
+      wake();
+    }
+
+    /* The first station waves once, a second after the chapter opens, and
+       only while the walk has not started.
+
+       Which station depends on what is on screen. With the whole sheet in
+       view it is the chapel, because that is where the story starts. On a
+       phone the sheet is wider than the screen and the chapel sits off
+       the left edge, so waving at it would be a hint nobody could see;
+       there it is whichever main station is nearest the middle of what is
+       actually showing. */
+    function firstStation() {
+      if (whole) return MAIN[0];
+      let best = MAIN[0], gap = Infinity;
+      MAIN.forEach(key => {
+        if (done[key]) return;
+        const b = HOT[key];
+        const d = Math.abs((b[0] + b[2]) / 2 - (0.5 - pan));
+        if (d < gap) { gap = d; best = key; }
+      });
+      return best;
+    }
+    let beckonTimer = 0;
+    function beckonFirst() {
+      clearTimeout(beckonTimer);
+      if (touched || countMain() > 0) return;
+      beckonTimer = setTimeout(() => {
+        if (active && !touched && countMain() === 0) beckon(firstStation(), false);
+      }, 1000);
+    }
+
     /* ---------------- the places ---------------- */
+    const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
     PLACES.forEach(key => {
       const el = hot[key]; if (!el) return;
-      el.addEventListener('click', () => { if (active && !dragged()) openStation(key); });
+      el.setAttribute('aria-label', T5[lang5].st[key].t);
+      el.addEventListener('click', () => {
+        if (active && !dragged() && !locked(key)) openStation(key);
+      });
       /* Reaching a place lifts its sticker off the page. On a touch screen
          this fires as the finger lands, which is right: the paper comes up
          under the finger and goes back down when it leaves. */
-      el.addEventListener('pointerenter', () => { if (active) setHot(key); });
-      el.addEventListener('pointerleave', () => setHot(null));
-      el.addEventListener('focus', () => { if (active) setHot(key); });
-      el.addEventListener('blur', () => setHot(null));
+      el.addEventListener('pointerenter', () => {
+        if (!active || locked(key)) return;
+        setHot(key);
+        /* Naming it is for a pointer that hovers. On a touch screen the
+           press has already opened the card by the time a label could be
+           read, so it would only ever flash behind it. */
+        if (fine && !done[key]) nameAt(key);
+      });
+      el.addEventListener('pointerleave', () => { setHot(null); if (fine) hideSay(); });
+      el.addEventListener('focus', () => {
+        if (!active || locked(key)) return;
+        setHot(key);
+        if (!done[key]) nameAt(key);
+      });
+      el.addEventListener('blur', () => { setHot(null); hideSay(); });
     });
+
+    /* The place's own name, on the torn scrap the eggs already use, held
+       for as long as the pointer stays rather than timed out. */
+    function nameAt(key) {
+      /* The open station already has a tag of its own, and it says more
+         than this one would: which stop it is as well as its name. */
+      if (key === stationNow()) return;
+      const b = HOT[key];
+      sayAt(T5[lang5].st[key].t, (b[0] + b[2]) / 2, b[1], true);
+    }
     /* ---------------- the five small illustrations ----------------
        A press, a small movement in the painting, and whatever belongs with
        it drawn on top. No cards, no counters, nothing to collect: they are
        not part of the walk and finding them is the whole of the reward. */
     EGG_KEYS.forEach(key => {
       const el = hot[key]; if (!el) return;
-      el.addEventListener('click', () => { if (active && !dragged()) runEgg(key); });
+      el.addEventListener('click', () => {
+        if (!active || dragged()) return;
+        firstTouch();
+        runEgg(key);
+      });
     });
 
     function runEgg(key) {
@@ -9316,7 +9786,7 @@ function renderWatercolorStamp(text, tone, opts) {
        the artwork's own coordinates, so it follows the map when the map is
        dragged rather than hanging in the middle of the screen. */
     let sayTimer = 0;
-    function sayAt(text, fx, fyTop) {
+    function sayAt(text, fx, fyTop, hold) {
       if (!sayEl) return;
       sayEl.textContent = text;
       sayEl.style.left = SX(fx) + 'px';
@@ -9325,7 +9795,15 @@ function renderWatercolorStamp(text, tone, opts) {
       void sayEl.offsetWidth;
       sayEl.classList.add('is-in');
       clearTimeout(sayTimer);
-      sayTimer = setTimeout(() => sayEl.classList.remove('is-in'), 2500);
+      if (!hold) sayTimer = setTimeout(() => sayEl.classList.remove('is-in'), 2500);
+    }
+    /* Hovering a building borrows the tag; letting go gives it back to
+         whichever station is open rather than leaving the map unsignposted. */
+    function hideSay() {
+      if (!sayEl) return;
+      clearTimeout(sayTimer);
+      if (pinned) sayAt(pinned.text, pinned.fx, pinned.fy, true);
+      else sayEl.classList.remove('is-in');
     }
 
     /* ---------------- all five ---------------- */
@@ -9667,7 +10145,6 @@ function renderWatercolorStamp(text, tone, opts) {
       prevB.setAttribute('aria-label', g.prev);
       nextB.setAttribute('aria-label', g.next);
       galX.setAttribute('aria-label', T5[lang5].closeAria);
-      galX.firstElementChild.textContent = T5[lang5].close;
       shot.alt = g.t;
     }
 
@@ -9712,6 +10189,14 @@ function renderWatercolorStamp(text, tone, opts) {
       rings: rings.length, sparks: sparks.length, pops: pops.length,
       circles: document.querySelectorAll('#s5 circle, #s5-prog circle').length,
     });
+    window.__s5station = stationNow;
+    window.__s5locked = locked;
+    window.__s5stage = stageIndex;
+    window.__s5trail = () => trail;
+    window.__s5find  = findOnMap;
+    window.__s5first = firstStation;
+    window.__s5beckon = beckon;
+    window.__s5touched = () => touched;
     window.__s5lamp  = lampAt;
     window.__s5star  = starAt;
     window.__s5egg   = key => { if (active) runEgg(key); };
@@ -9789,10 +10274,12 @@ function renderWatercolorStamp(text, tone, opts) {
         pushDone();
         paintSeals();
         paintProgress();
+        paintLocks();
         s5.classList.add('is-in');
         progEl.classList.add('is-in');
         progEl.setAttribute('aria-hidden', 'false');
-        showHint(whole ? T5[lang5].hint : T5[lang5].hintDrag);
+        showHint(whole ? T5[lang5].hint : T5[lang5].hintDrag, !touched);
+        beckonFirst();
         paint(0, 0);
         wake();
       } else {
