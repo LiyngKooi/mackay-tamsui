@@ -2480,6 +2480,27 @@
       transform: rotate(.35deg);
     }
 
+    /* ---------------- the slip, on two lines ----------------
+       One line carried a title, a tally, a badge, five rings, six pips
+       and two tickets, and ran most of the way across a desktop. Folded
+       in two it says the same things in about two thirds the width and
+       stops covering the bottom of the map.
+
+       The fold is not arbitrary: the first line is the walk and the
+       second is what came of it. Each puts its words on the left and its
+       objects on the right, so the two align down both edges. */
+    #s5-prog-paper {
+      display: grid !important;
+      gap: 9px;
+      align-items: stretch !important;
+    }
+    .s5-prog-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 18px;
+    }
+    #s5-prog-r2 { gap: 22px; }
+    #s5-prog-mark { display: grid; gap: 3px; justify-items: start; }
+
     #s5-prog-text { display: grid; gap: 3px; }
     #s5-prog-t {
       margin: 0;
@@ -2716,6 +2737,147 @@
       .s5-pip.is-on { animation: none; }
       #s5-prog-side:not([disabled]):hover .s5-pip:not(.is-on) { transform: none; }
       #s5-prog-gal:hover, #s5-prog-gal:active { transform: rotate(-1.6deg); }
+    }
+
+    /* ---------------- the two keepsakes ----------------
+       They sit together so they can move together: on a narrow screen
+       the pair drops to its own line rather than squeezing the five
+       rings, which are the thing the slip is actually for. */
+    #s5-prog-keeps {
+      display: flex; align-items: center; gap: 8px; flex: none;
+    }
+
+    /* The map ticket. Vermilion against the postcards' cream, leaning the
+       other way, because it turns up only when all eleven seals are in
+       and should read as the thing that was earned rather than as a
+       second copy of its neighbour. The two inks are the two the seals
+       are pressed in. */
+    #s5-prog-map {
+      display: inline-flex; align-items: center; gap: 6px;
+      flex: none;
+      padding: 7px 11px 7px 10px;
+      background: linear-gradient(168deg, #B2412F 0%, #A8382B 55%, #97301F 100%);
+      clip-path: polygon(0% 8%, 7% 2%, 19% 6%, 32% 1%, 45% 5%, 58% 0%, 71% 5%,
+                         84% 1%, 95% 6%, 100% 11%, 99% 26%, 100% 42%, 98% 58%,
+                         100% 74%, 99% 90%, 94% 97%, 83% 93%, 70% 99%, 57% 94%,
+                         44% 100%, 31% 95%, 18% 99%, 7% 94%, 1% 88%, 2% 72%,
+                         0% 56%, 1% 40%, 0% 24%);
+      border: 0;
+      font-family: 'Noto Serif TC', 'Songti TC', 'PMingLiU', '新細明體', serif;
+      font-size: 11.5px; font-weight: 700; letter-spacing: .08em;
+      color: #FBF5E8; white-space: nowrap; cursor: pointer;
+      filter: drop-shadow(1px 2px 3px rgba(74, 28, 18, .34));
+      transform: rotate(1.5deg);
+      transition: transform .28s cubic-bezier(.2, 1.3, .4, 1), filter .28s ease;
+      /* It has just been earned, so it arrives rather than appears. The
+         animation runs once, when the button is first laid out. */
+      animation: s5KeepIn .52s cubic-bezier(.2, 1.5, .4, 1) backwards;
+    }
+    #s5-prog-map .s5-fold { width: 16px; height: 12px; flex: none; }
+    #s5-prog-map[hidden] { display: none; }
+    #s5-prog-map:focus-visible { outline: 2px solid #5E3A1E; outline-offset: 3px; }
+    @keyframes s5KeepIn {
+      0%   { opacity: 0; transform: rotate(-7deg) translateY(8px) scale(.78); }
+      60%  { opacity: 1; transform: rotate(3.4deg) translateY(-2px) scale(1.05); }
+      100% { opacity: 1; transform: rotate(1.5deg) translateY(0) scale(1); }
+    }
+    @media (hover: hover) and (pointer: fine) {
+      #s5-prog-map:hover {
+        transform: rotate(2.4deg) translateY(-2px) scale(1.035);
+        filter: drop-shadow(1px 4px 6px rgba(74, 28, 18, .42));
+      }
+    }
+    #s5-prog-map:active { transform: rotate(1.5deg) scale(.97); }
+
+    /* And the postcards wander a touch under the pointer too, which they
+       did not before: two tickets side by side that behave differently
+       read as a mistake. */
+    @media (hover: hover) and (pointer: fine) {
+      #s5-prog-gal:hover { transform: rotate(-2.5deg) translateY(-2px) scale(1.035); }
+    }
+
+    @media (max-width: 560px) {
+      /* The pair drops below the rings rather than squeezing them. */
+      #s5-prog-paper { flex-wrap: wrap; }
+      #s5-prog-keeps { gap: 7px; }
+      #s5-prog-map { font-size: 10.5px; padding: 6px 9px; }
+      #s5-prog-map .s5-fold { width: 14px; height: 11px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #s5-prog-map { transition: none; animation: none; }
+      #s5-prog-map:hover, #s5-prog-map:active { transform: rotate(1.5deg); }
+      #s5-prog-gal:hover { transform: rotate(-1.6deg); }
+    }
+
+    /* ---------------- the two tickets ----------------
+       Both are torn, so neither can carry a border: a clip-path cuts the
+       border off with the corners, and an inset shadow follows the
+       rectangle the polygon has just bitten into.
+
+       A drop-shadow does follow the torn silhouette, but it cannot be
+       put on the clipped element: clipping happens after filtering, so a
+       ring of shadows there is cut away by the very polygon it is
+       tracing. It has to be drawn one level up. So the button is a bare
+       wrapper carrying the filter and the tilt, and the span inside it
+       carries the paper, the tear and the type. */
+    #s5-prog-gal, #s5-prog-map {
+      display: inline-block; padding: 0; border: 0; line-height: 0;
+      background: none; clip-path: none; cursor: pointer;
+    }
+    .s5-tick {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 11px 7px 10px;
+      clip-path: polygon(0% 8%, 7% 2%, 19% 6%, 32% 1%, 45% 5%, 58% 0%, 71% 5%, 84% 1%, 95% 6%, 100% 11%, 99% 26%, 100% 42%, 98% 58%, 100% 74%, 99% 90%, 94% 97%, 83% 93%, 70% 99%, 57% 94%, 44% 100%, 31% 95%, 18% 99%, 7% 94%, 1% 88%, 2% 72%, 0% 56%, 1% 40%, 0% 24%);
+      font-family: 'Noto Serif TC', 'Songti TC', 'PMingLiU', '新細明體', serif;
+      font-size: 11.5px; font-weight: 700; letter-spacing: .08em; line-height: 1.25;
+      white-space: nowrap;
+    }
+    #s5-prog-gal .s5-tick {
+      background: linear-gradient(168deg, #F2E7CF 0%, #EDE0C4 58%, #E4D4B2 100%);
+      color: #6E4124;
+    }
+    /* A chop on paper rather than a slab of paint: the red is a line and
+       a wash, not a fill. The solid block it replaces was the loudest
+       thing in the chapter, sitting beside five quiet blue seals. */
+    #s5-prog-map .s5-tick {
+      background: linear-gradient(168deg, #FBF1ED 0%, #F5DFD9 58%, #EFD1C9 100%);
+      color: #982E22;
+    }
+    #s5-prog-gal { filter: drop-shadow(0.5px 0 0 rgba(122, 74, 42, .35)) drop-shadow(-0.5px 0 0 rgba(122, 74, 42, .35)) drop-shadow(0 0.5px 0 rgba(122, 74, 42, .35)) drop-shadow(0 -0.5px 0 rgba(122, 74, 42, .35)) drop-shadow(0 2px 3px rgba(86, 58, 22, .26)); }
+    #s5-prog-map {
+      filter: drop-shadow(0.75px 0 0 #A8382B) drop-shadow(-0.75px 0 0 #A8382B) drop-shadow(0 0.75px 0 #A8382B) drop-shadow(0 -0.75px 0 #A8382B) drop-shadow(0 2px 3px rgba(122, 48, 34, .24));
+      transform: rotate(1.2deg);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      #s5-prog-gal:hover {
+        filter: drop-shadow(0.5px 0 0 rgba(122, 74, 42, .35)) drop-shadow(-0.5px 0 0 rgba(122, 74, 42, .35)) drop-shadow(0 0.5px 0 rgba(122, 74, 42, .35)) drop-shadow(0 -0.5px 0 rgba(122, 74, 42, .35)) drop-shadow(0 4px 6px rgba(86, 58, 22, .32));
+      }
+      #s5-prog-map:hover {
+        transform: rotate(2.1deg) translateY(-2px) scale(1.035);
+        filter: drop-shadow(0.75px 0 0 #A8382B) drop-shadow(-0.75px 0 0 #A8382B) drop-shadow(0 0.75px 0 #A8382B) drop-shadow(0 -0.75px 0 #A8382B) drop-shadow(0 4px 7px rgba(122, 48, 34, .30));
+      }
+    }
+    #s5-prog-map:active { transform: rotate(1.2deg) scale(.97); }
+    @keyframes s5KeepIn {
+      0%   { opacity: 0; transform: rotate(-7deg) translateY(8px) scale(.78); }
+      60%  { opacity: 1; transform: rotate(3.1deg) translateY(-2px) scale(1.05); }
+      100% { opacity: 1; transform: rotate(1.2deg) translateY(0) scale(1); }
+    }
+
+    @media (max-width: 560px) {
+      /* The tickets have a line of their own now, so the old rule that
+         pushed them onto one is gone; what is left is letting the five
+         rings drop under the title when the title alone fills the row. */
+      #s5-prog-keeps { flex: none; }
+      .s5-prog-row { flex-wrap: wrap; gap: 8px 12px; }
+      #s5-prog-r1 #s5-prog-slots { flex: 1 0 100%; justify-content: space-between; }
+      .s5-tick { font-size: 10.5px; padding: 6px 9px; }
+      #s5-prog-map .s5-fold, #s5-prog-gal .s5-env { width: 14px; height: 11px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #s5-prog-map:hover, #s5-prog-map:active { transform: rotate(1.2deg); }
     }
 
     #s5-prog-slots { display: flex; gap: 8px; }
@@ -3510,19 +3672,32 @@
        would turn a keepsake into a dashboard. -->
   <div id="s5-prog" aria-live="polite" aria-hidden="true">
     <div id="s5-prog-paper">
-      <div id="s5-prog-text">
-        <p id="s5-prog-t"></p>
-        <p id="s5-prog-en"></p>
-        <p id="s5-prog-badge" hidden></p>
-        <!-- Six marks for the six finds. A button, because an unfilled
-             one is a question and the answer is somewhere on a map that
-             may be wider than the screen. -->
-        <button id="s5-prog-side" type="button"></button>
+      <!-- The first line is the walk. -->
+      <div class="s5-prog-row" id="s5-prog-r1">
+        <div id="s5-prog-text">
+          <p id="s5-prog-t"></p>
+          <p id="s5-prog-en"></p>
+        </div>
+        <div id="s5-prog-slots" aria-hidden="true"></div>
       </div>
-      <div id="s5-prog-slots" aria-hidden="true"></div>
-      <!-- Appears with the fifth seal and stays. Before that there is
-           nothing behind it. -->
-      <button id="s5-prog-gal" type="button" hidden><svg class="s5-env" viewBox="0 0 24 18" aria-hidden="true" focusable="false"><path d="M1.6 2.4 22.4 2.4 22.4 15.6 1.6 15.6Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M1.6 3.1 12 10.2 22.4 3.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="s5-prog-gal-t"></span></button>
+      <!-- The second is what came of it. -->
+      <div class="s5-prog-row" id="s5-prog-r2">
+        <div id="s5-prog-mark">
+          <p id="s5-prog-badge" hidden></p>
+          <!-- Six marks for the six finds. A button, because an unfilled
+               one is a question and the answer is somewhere on a map that
+               may be wider than the screen. -->
+          <button id="s5-prog-side" type="button"></button>
+        </div>
+      <!-- The two keepsakes. The first appears with the fifth seal, the
+           second only when all eleven are in. They are wrapped together
+           so that on a narrow screen the pair moves to its own line
+           instead of crowding the five rings. -->
+      <div id="s5-prog-keeps">
+      <button id="s5-prog-gal" type="button" hidden><span class="s5-tick"><svg class="s5-env" viewBox="0 0 24 18" aria-hidden="true" focusable="false"><path d="M1.6 2.4 22.4 2.4 22.4 15.6 1.6 15.6Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M1.6 3.1 12 10.2 22.4 3.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="s5-prog-gal-t"></span></span></button>
+      <button id="s5-prog-map" type="button" hidden><span class="s5-tick"><svg class="s5-fold" viewBox="0 0 24 18" aria-hidden="true" focusable="false"><path d="M1.6 3.4 8.4 1.5 15.6 4.3 22.4 2.1 22.4 14.6 15.6 16.8 8.4 14 1.6 16.2Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8.4 1.5 8.4 14M15.6 4.3 15.6 16.8" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg><span id="s5-prog-map-t"></span></span></button>
+      </div>
+      </div>
     </div>
   </div>
 
@@ -8686,6 +8861,8 @@ function renderWatercolorStamp(text, tone, opts) {
         badge: '全地圖制霸',
         sideDone: '已探',
         galBack: '紀念明信片',
+        mapBack: '典藏活地圖',
+
         fin: {
           t: '十一枚印章全數到齊',
           s: '主線五枚、支線六枚，這張地圖已經是你走過的樣子。'
@@ -8838,6 +9015,8 @@ function renderWatercolorStamp(text, tone, opts) {
         badge: 'The whole map',
         sideDone: 'Visited',
         galBack: 'Postcards',
+        mapBack: 'Your map',
+
         fin: {
           t: 'All eleven seals',
           s: 'Five on the trail and six off it. The map is now a record of '
@@ -9025,6 +9204,8 @@ function renderWatercolorStamp(text, tone, opts) {
     const sideEl = document.getElementById('s5-prog-side');
     const galBtn = document.getElementById('s5-prog-gal');
     const galBtnT = document.getElementById('s5-prog-gal-t');
+    const mapBtn = document.getElementById('s5-prog-map');
+    const mapBtnT = document.getElementById('s5-prog-map-t');
     const sayEl = document.getElementById('s5-say');
 
     /* The eleven buildings and the two birds, built from the list rather
@@ -9240,6 +9421,13 @@ function renderWatercolorStamp(text, tone, opts) {
         galBtn.hidden = countMain() < MAIN.length;
         if (galBtnT) galBtnT.textContent = t.galBack;
         galBtn.setAttribute('aria-label', t.galBack);
+      }
+      /* The map only after all eleven: before that the card behind it
+         would be a map of a walk that is not finished. */
+      if (mapBtn) {
+        mapBtn.hidden = !(countMain() >= MAIN.length && countSide() >= SIDE.length);
+        if (mapBtnT) mapBtnT.textContent = t.mapBack;
+        mapBtn.setAttribute('aria-label', t.mapBack);
       }
       slotsEl.replaceChildren();
       MAIN.forEach(key => {
@@ -10617,6 +10805,9 @@ function renderWatercolorStamp(text, tone, opts) {
     if (galBtn) galBtn.addEventListener('click', () => {
       if (active) openGallery();
     });
+    if (mapBtn) mapBtn.addEventListener('click', () => {
+      if (active) showDone();
+    });
     gal.addEventListener('click', e => { if (e.target === gal) closeGallery(); });
     prevB.addEventListener('click', () => step2(-1));
     nextB.addEventListener('click', () => step2(1));
@@ -10776,12 +10967,18 @@ function renderWatercolorStamp(text, tone, opts) {
       doneX.setAttribute('aria-label', T5[lang5].closeAria);
     }
 
-    function openDone() {
-      if (shown11) return;
-      shown11 = true;
+    /* Putting the card up. Separated from the one that fires on the
+       eleventh seal, which must happen exactly once; this one is behind a
+       button and must work every time. The composite is cached from the
+       first run, so opening it again is immediate rather than another
+       pass over a two and a half thousand pixel canvas. */
+    function showDone() {
       labelDone();
-      doneDl.removeAttribute('href');
-      doneDl.setAttribute('aria-disabled', 'true');
+      doneNote.textContent = '';
+      if (!doneDl.getAttribute('href')) {
+        doneDl.setAttribute('aria-disabled', 'true');
+        doneDl.textContent = T5[lang5].fin.busy;
+      }
       doneEl.classList.add('is-in');
       doneEl.setAttribute('aria-hidden', 'false');
       stampedMap().then(url => {
@@ -10791,6 +10988,13 @@ function renderWatercolorStamp(text, tone, opts) {
         doneDl.removeAttribute('aria-disabled');
         doneDl.textContent = T5[lang5].fin.dl;
       });
+    }
+
+    function openDone() {
+      if (shown11) return;
+      shown11 = true;
+      doneDl.removeAttribute('href');
+      showDone();
     }
     function closeDone() {
       doneEl.classList.remove('is-in');
@@ -10829,6 +11033,13 @@ function renderWatercolorStamp(text, tone, opts) {
       circles: document.querySelectorAll('#s5 circle, #s5-prog circle').length,
     });
     window.__s5done  = () => doneEl.classList.contains('is-in');
+    window.__s5rows = () => Array.from(
+      document.querySelectorAll('#s5-prog-paper > .s5-prog-row'),
+      r => Math.round(r.getBoundingClientRect().width));
+    window.__s5keeps = () => ({
+      gal: galBtn ? !galBtn.hidden : false,
+      map: mapBtn ? !mapBtn.hidden : false,
+    });
     window.__s5map   = () => stampedMap();
     window.__s5mapdl = () => doneDl.getAttribute('href');
     window.__s5pips = () => Array.from(
