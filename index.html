@@ -4258,7 +4258,7 @@
   /* What the river at Tamsui looks like with nothing laid over it. Stated
      in full, every uniform of it, because a value left out of this list is
      not a default: it is whatever the chapter before it happened to set. */
-  const HOME_LOOK = { warm: 0.0, disp: 2.40, swell: 0.026, glint: 0.120,
+  const HOME_LOOK = { mainPack: 0.0, mainPack2: 0.0, openWho: 0.0, openAmt: 0.0, warm: 0.0, disp: 2.40, swell: 0.026, glint: 0.120,
                       gf: 5.00, gsharp: 2.00, heel: 0.0, pan: 0.0,
                       wind: 0.0, cloud: 0.0, cdrift: 0.0, fit: 0.0, spark: 0.0,
                       lift: 0.0, liftHot: -1.0, liftAmt: 0.0, liftDone: 0.0, liftDone2: 0.0, boat: 0.0,
@@ -4488,7 +4488,7 @@
     /* The full look, not just the parts that differ from the defaults.
        Another chapter may have left the renderer somewhere else, and a
        chapter that only sets what it thinks is special inherits the rest. */
-    const LOOK = { warm: 0.0, disp: 2.40, swell: 0.026, glint: 0.120,
+    const LOOK = { mainPack: 0.0, mainPack2: 0.0, openWho: 0.0, openAmt: 0.0, warm: 0.0, disp: 2.40, swell: 0.026, glint: 0.120,
                    gf: 5.00, gsharp: 2.00, heel: 0.012, wind: 0.0, cloud: 0.0,
                    cdrift: 0.0, fit: 0.0, spark: 0.0,
                    lift: 0.0, liftHot: -1.0, liftAmt: 0.0, liftDone: 0.0, liftDone2: 0.0, boat: 0.0,
@@ -5000,7 +5000,7 @@
 
     /* Lamplight rather than sun on water: no displacement at all, a slow
        warm swell on the flames and the pools of light under them. */
-    const LOOK = { warm: 1.0, disp: 0.0, swell: 0.0, glint: 0.14, gf: 0.18, gsharp: 1.10, heel: 0.0, wind: 0.0,
+    const LOOK = { mainPack: 0.0, mainPack2: 0.0, openWho: 0.0, openAmt: 0.0, warm: 1.0, disp: 0.0, swell: 0.0, glint: 0.14, gf: 0.18, gsharp: 1.10, heel: 0.0, wind: 0.0,
                    cloud: 0.0, cdrift: 0.0, fit: 0.0, spark: 0.0,
                    lift: 0.0, liftHot: -1.0, liftAmt: 0.0, liftDone: 0.0, liftDone2: 0.0, boat: 0.0,
                    eggWho: -1.0, eggAmt: 0.0, boatGo: 0.0, shake: 0.0 };
@@ -7212,7 +7212,7 @@ function renderWatercolorStamp(text, tone, opts) {
        the reduced-motion setting, so neither needs to ask about it here. */
     const CDRIFT = 0.0369;
     const CLOUD  = 0.062;
-    const LOOK = { warm: 0.0, disp: 0.0, swell: 0.0, glint: 0.0,
+    const LOOK = { mainPack: 0.0, mainPack2: 0.0, openWho: 0.0, openAmt: 0.0, liftDone2: 0.0, warm: 0.0, disp: 0.0, swell: 0.0, glint: 0.0,
                    gf: 5.00, gsharp: 2.00, heel: 0.0,
                    wind: WIND_CALM, cloud: CLOUD, cdrift: CDRIFT,
                    fit: 0.0, spark: 0.0,
@@ -7686,7 +7686,7 @@ function renderWatercolorStamp(text, tone, opts) {
        this one leaves the renderer wherever it had it. Warm, because the
        glitter here is a sunset and not a noon sun; fine and tight, because
        the estuary is far away and its sparkle should be small. */
-    const LOOK = { warm: 0.55, disp: 2.60, swell: 0.0125, glint: 0.185,
+    const LOOK = { mainPack: 0.0, mainPack2: 0.0, openWho: 0.0, openAmt: 0.0, liftDone2: 0.0, warm: 0.55, disp: 2.60, swell: 0.0125, glint: 0.185,
                    /* Coarse and tight rather than fine and soft. The first
                       build had the glitter grain finer than the pixels the
                       estuary is drawn on, which does not read as sparkle:
@@ -8554,7 +8554,7 @@ function renderWatercolorStamp(text, tone, opts) {
        lift and boat are set from the screen rather than written down,
        because eleven pixels means eleven pixels whatever size the map is
        being shown at. pushScale works them out. */
-    const LOOK = {
+    const LOOK = { mainPack: 0.0, mainPack2: 0.0, openWho: 0.0, openAmt: 0.0,
       warm: 0.0, disp: 0.0, swell: 0.0, glint: 0.0,
       gf: 5.00, gsharp: 2.00, heel: 0.0,
       wind: 0.0, cloud: 0.0, cdrift: 0.0,
@@ -11149,6 +11149,11 @@ function renderWatercolorStamp(text, tone, opts) {
         progEl.classList.remove('is-in');
         progEl.setAttribute('aria-hidden', 'true');
         hintEl.classList.remove('is-in');
+        /* The paper tag is pinned over a building but lives at the end of
+           the body, not inside #s5, so hiding the chapter never hid it:
+           it stayed floating over whichever chapter came next. */
+        pinStop();
+        if (sayEl) sayEl.classList.remove('is-in');
         setHot(null);
         hotAmt = 0;
         if (window.__set) window.__set('liftAmt', 0);
@@ -11159,7 +11164,15 @@ function renderWatercolorStamp(text, tone, opts) {
            states its whole look on the way in and its enter runs before
            this exit, so clearing anything would undo what the chapter
            arriving had just set. That mistake cost chapter three its wind
-           once already. */
+           once already.
+
+           Which is why the station uniforms had to be added to every
+           chapter's look rather than cleared here. For a while only this
+           chapter set mainPack, mainPack2, openWho and openAmt, so they
+           kept their values after the map was left and the watermark that
+           greys an unreached station went on running over chapter three's
+           mask, whose green channel is laid out in horizontal bands and
+           means something else entirely. */
       }
     });
   })();
