@@ -2901,7 +2901,7 @@
       font-size: 24px; letter-spacing: .03em; color: #2C2219;
     }
     #ed-sub {
-      margin: 0 0 14px; font-family: 'Lato', sans-serif; font-style: italic;
+      margin: 0 0 14px; font-family: 'Lato', sans-serif; font-style: normal;
       font-size: 14px; letter-spacing: .02em; color: #8C6A3E;
     }
     #ed-card .rule {
@@ -4449,6 +4449,346 @@
       box-shadow: 0 2px 6px rgba(44, 34, 25, 0.25);
       z-index: 20;
     }
+    /* ===================================================================
+       THE PLATES, AS ONE OBJECT
+
+       Everything below is deliberately at the foot of the sheet. Each
+       plate was written inside its own chapter and tuned there, and
+       going back into three sets of finished rules to make them agree
+       is how a finished chapter gets broken. Here they are described
+       once, and order alone makes it stick.
+       =================================================================== */
+
+    /* ---------------- the close mark ----------------
+       Was: three wobbled cinnabar rings with 閉 or 返 pressed into the
+       middle of them, a drawn seal at 42px. It read as an object in its
+       own right, which is a lot of voice for a control whose whole job
+       is to get out of the way.
+
+       Is: one hairline circle on opaque paper with a thin cross in it.
+       The paper matters as much as the ink: over 露天教育's grey
+       photograph a cinnabar mark on nothing simply was not there. */
+    #flap-close,
+    #arc-close,
+    #qr-close,
+    #ed-card-x,
+    #ed-3d-x,
+    #s5-card-x {
+      position: absolute; z-index: 20;
+      width: 36px; height: 36px; padding: 0;
+      display: grid; place-items: center;
+      border: 1px solid #9E2A22;
+      border-radius: 50%;
+      background: #FAF5EA;
+      box-shadow: 0 1px 4px rgba(44, 34, 25, .16);
+      color: #9E2A22;
+      font-size: 0; line-height: 0;
+      transform: none; rotate: 0deg; scale: 1;
+      cursor: pointer;
+      overflow: hidden;
+      transition: border-color .35s cubic-bezier(0.22, 1, 0.36, 1);
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* the drawn chop and its character, left in the markup by nothing
+       but history, are not painted */
+    #flap-close .chop-ring,
+    #arc-close .chop-ring,
+    #qr-close .chop-ring,
+    #ed-card-x .chop-ring,
+    #ed-3d-x .chop-ring,
+    #s5-card-x .chop-ring,
+    #flap-close > span,
+    #arc-close > span,
+    #qr-close > span,
+    #ed-card-x > span,
+    #ed-3d-x > span,
+    #s5-card-x > span { display: none !important; }
+
+    /* the wash. It was the chop's hover ink; it is the same pseudo
+       element doing the same job at a quieter level. */
+    #flap-close::before,
+    #arc-close::before,
+    #qr-close::before,
+    #ed-card-x::before,
+    #ed-3d-x::before,
+    #s5-card-x::before {
+      content: ''; position: absolute; inset: 0;
+      border-radius: 50%; pointer-events: none;
+      background: rgba(158, 42, 34, 0.08);
+      opacity: 0;
+      transition: opacity .35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    /* the colour goes here too, not only the fade: the chop's own
+       focus rule set a heavier red at the same place and outranks a
+       plain ::before, so stating it only once left the old wash on. */
+    #flap-close:hover::before,
+    #arc-close:hover::before,
+    #qr-close:hover::before,
+    #ed-card-x:hover::before,
+    #ed-3d-x:hover::before,
+    #s5-card-x:hover::before { opacity: 1; background: rgba(158, 42, 34, 0.08); }
+    /* The chop lifted, straightened and grew under a pointer. The ring
+       is furniture now and holds its ground; only the cross moves. */
+    #flap-close:hover,
+    #arc-close:hover,
+    #qr-close:hover,
+    #ed-card-x:hover,
+    #ed-3d-x:hover,
+    #s5-card-x:hover,
+    #flap-close:focus-visible,
+    #arc-close:focus-visible,
+    #qr-close:focus-visible,
+    #ed-card-x:focus-visible,
+    #ed-3d-x:focus-visible,
+    #s5-card-x:focus-visible { transform: none; scale: 1; translate: none; }
+
+    /* The cross is 16px across inside the 36px ring, and the box is
+       16 units wide so stroke-width: 1.6 is 1.6 real pixels. The old
+       mark was 13px of box with the ink only across the middle 37% of
+       it, which is how a 4.8px cross ended up in a 36px ring. */
+    .plate-x {
+      width: 16px; height: 16px; display: block; overflow: visible;
+      fill: none; stroke: #9E2A22; stroke-width: 1.6; stroke-linecap: round;
+      transform-origin: 50% 50%;
+      transition: transform .22s cubic-bezier(0.2, 0, 0, 1);
+    }
+    /* the ring holds still, the cross turns */
+    #flap-close:hover .plate-x,
+    #arc-close:hover .plate-x,
+    #qr-close:hover .plate-x,
+    #ed-card-x:hover .plate-x,
+    #ed-3d-x:hover .plate-x,
+    #s5-card-x:hover .plate-x { transform: rotate(90deg); }
+    #flap-close:active,
+    #arc-close:active,
+    #qr-close:active,
+    #ed-card-x:active,
+    #ed-3d-x:active,
+    #s5-card-x:active { transform: none; scale: .94; }
+    #flap-close:focus-visible,
+    #arc-close:focus-visible,
+    #qr-close:focus-visible,
+    #ed-card-x:focus-visible,
+    #ed-3d-x:focus-visible,
+    #s5-card-x:focus-visible {
+      outline: 1px solid rgba(158, 42, 34, .55); outline-offset: 3px;
+    }
+
+    /* ---------------- one plate, three chapters ----------------
+       登陸 was 680 wide with a 4px radius, no border and a red-brown
+       title at 27px; 仁醫 760, square, bordered, ink at 31px; 啟蒙 640,
+       2px, a gold hairline, ink at 24px. Three cards cut by three
+       different hands. */
+    /* the landing point for focus when a plate opens; the close mark
+       keeps its own ring for the keyboard */
+    #flap:focus, #arc:focus, #ed-card:focus, #qr-card:focus,
+    #ed-3d-wrap:focus { outline: none; }
+    #flap, #arc, #ed-card {
+      width: min(720px, 100%); max-width: 100%;
+      background: #FAF5EA;
+      border: 0;
+      border-radius: 3px;
+      box-shadow: 0 26px 60px rgba(8, 5, 2, .52), 0 6px 16px rgba(8, 5, 2, .34);
+    }
+    #ed-stack { width: min(720px, 100%); }
+    /* the gilt hairline, inside the paper rather than on its edge */
+    #flap::after, #arc::after, #ed-card::after {
+      content: ''; position: absolute; inset: 9px; pointer-events: none;
+      border: 1px solid rgba(166, 137, 76, .38);
+      border-radius: 1px;
+    }
+    #flap-scroll, .arc-scroll, .ed-scroll {
+      padding: clamp(30px, 4vw, 40px) clamp(26px, 4vw, 42px) 10px;
+    }
+
+    /* the eyebrow: year and place, struck like a catalogue date. All
+       four of the cards that carry one are named here; 永恆 and 尋蹤
+       have no kicker at all, so this is the whole site. */
+    #flap .kicker, #arc .kicker, #ed-card .kicker, #qr-card .kicker,
+    #flap p.kicker, #arc p.kicker, #ed-card p.kicker, #qr-card p.kicker {
+      margin: 0 0 10px;
+      font-family: 'Courier Prime', 'Courier New', monospace;
+      font-weight: 400; font-style: normal;
+      font-size: 11.5px; letter-spacing: .15em; text-transform: uppercase;
+      color: #A6894C;
+    }
+    #ed-card .kicker { padding-right: 46px; }
+    /* the serif head */
+    /* #flap h2 and #arc h2 are each more specific than a bare id, so
+       the heads are named through their cards to outrank them. 登陸's
+       was red-brown and the other two ink; one ink now. */
+    #flap #flap-title, #arc #arc-title, #ed-card #ed-title {
+      margin: 0 0 5px;
+      font-family: var(--pb-title); font-weight: 700;
+      font-size: clamp(1.45rem, 2.4vw, 1.85rem); line-height: 1.42;
+      letter-spacing: .06em;
+      color: #2C2219;
+    }
+
+    /* The second line of the head. 啟蒙 had one and the other two did
+       not, which is most of why the cards read as three designs. It is
+       upright now rather than italic, and widely tracked.
+
+       The copy is the station's own name in the other language, which
+       is how a bilingual plate is set and means nothing had to be
+       written for it: Latin under a Chinese head, Chinese under an
+       English one. The second rule below catches that second case,
+       where Lato has no glyphs and wide tracking would be wrong. */
+    #flap .plate-sub, #arc .plate-sub, #ed-card .plate-sub,
+    #ed-card #ed-sub {
+      margin: 0 0 2px;
+      font-family: 'Lato', sans-serif;
+      font-weight: 400; font-style: normal;
+      font-size: 12.5px; line-height: 1.5;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: #7A6A58;
+    }
+    html[lang^="en"] #flap .plate-sub,
+    html[lang^="en"] #arc .plate-sub,
+    html[lang^="en"] #ed-card .plate-sub,
+    html[lang^="en"] #ed-card #ed-sub {
+      font-family: var(--pb-title);
+      font-size: 14px; letter-spacing: .06em;
+    }
+    #ed-card .plate-sub { padding-right: 46px; }
+    /* and the reading, in the same Ming as the head rather than the
+       rounded hand the three cards used. The English selectors are in
+       the list because 登陸 and 仁醫 each switched to Lato for English
+       and would otherwise keep doing it. */
+    #flap p.body, #arc p.body, #ed-card p.body,
+    html[lang^="en"] #flap p.body, html[lang^="en"] #arc p.body,
+    html[lang^="en"] #ed-card p.body {
+      font-family: var(--pb-title); font-weight: 400;
+      font-size: 15.5px; line-height: 1.85; letter-spacing: .03em;
+      color: #4A3A2A;
+      margin: 0 0 14px;
+    }
+    #flap .rule, #arc .rule, #ed-card .rule {
+      border: 0; height: 1px; margin: 16px 0;
+      background: linear-gradient(90deg,
+        rgba(166, 137, 76, 0), rgba(166, 137, 76, .5), rgba(166, 137, 76, 0));
+    }
+    /* 仁醫's button shelf drew its own edge, which with the two gilt
+       hairlines made three lines on one card. Two everywhere now. */
+    #arc .arc-foot { border-top: 0; }
+
+    /* ---------------- how a plate arrives ----------------
+       登陸's hinged open in depth, 仁醫's and 啟蒙's rose. One arrival
+       now: up eighteen pixels, open from 0.97. */
+    #flap-wrap.is-in #flap,
+    #arc-wrap.is-in #arc,
+    #ed-card-wrap.is-in #ed-card {
+      animation: plateUp .45s cubic-bezier(0.22, 1, 0.36, 1) both;
+      transform: none;
+      opacity: 1;
+    }
+    @keyframes plateUp {
+      from { opacity: 0; transform: translateY(18px) scale(.97); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* what is on the plate comes up behind it, a sixtieth of a second
+       apart, the way a page of a printed catalogue resolves as the eye
+       travels down it */
+    #flap-wrap.is-in #flap-scroll > *,
+    #arc-wrap.is-in .arc-scroll > *,
+    #ed-card-wrap.is-in .ed-scroll > *,
+    #ed-card-wrap.is-in .ed-foot > * {
+      /* backwards, not both. A filled animation keeps writing its own
+         end state after it finishes, and an animation outranks ordinary
+         declarations: plateLeaf ends on transform: none, which sat on
+         top of the held photograph's tilt for good and left the print
+         flat however far the pointer moved. backwards still hides each
+         leaf through its delay and hands the element back to the
+         stylesheet the moment it has arrived. */
+      animation: plateLeaf .5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    }
+    @keyframes plateLeaf {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: none; }
+    }
+    #flap-wrap.is-in #flap-scroll > :nth-child(1),
+    #arc-wrap.is-in .arc-scroll > :nth-child(1),
+    #ed-card-wrap.is-in .ed-scroll > :nth-child(1) { animation-delay: .14s; }
+    #flap-wrap.is-in #flap-scroll > :nth-child(2),
+    #arc-wrap.is-in .arc-scroll > :nth-child(2),
+    #ed-card-wrap.is-in .ed-scroll > :nth-child(2) { animation-delay: .20s; }
+    #flap-wrap.is-in #flap-scroll > :nth-child(3),
+    #arc-wrap.is-in .arc-scroll > :nth-child(3),
+    #ed-card-wrap.is-in .ed-scroll > :nth-child(3) { animation-delay: .26s; }
+    #flap-wrap.is-in #flap-scroll > :nth-child(4),
+    #arc-wrap.is-in .arc-scroll > :nth-child(4),
+    #ed-card-wrap.is-in .ed-scroll > :nth-child(4) { animation-delay: .32s; }
+    #flap-wrap.is-in #flap-scroll > :nth-child(5),
+    #arc-wrap.is-in .arc-scroll > :nth-child(5),
+    #ed-card-wrap.is-in .ed-scroll > :nth-child(5) { animation-delay: .38s; }
+    #flap-wrap.is-in #flap-scroll > :nth-child(n+6),
+    #arc-wrap.is-in .arc-scroll > :nth-child(n+6),
+    #ed-card-wrap.is-in .ed-scroll > :nth-child(n+6) { animation-delay: .44s; }
+    #ed-card-wrap.is-in .ed-foot > * { animation-delay: .50s; }
+
+    /* ---------------- the pictures breathe ----------------
+       Fourteen seconds from end to end and three and a half percent of
+       travel: at reading distance it is below the threshold where the
+       eye follows it, which is the point. A picture that moves enough
+       to notice would be competing with the words beside it. */
+    @keyframes plateBreathe {
+      0%, 100% { transform: scale(1); }
+      50%      { transform: scale(1.035); }
+    }
+    #flap-fig, #arc-fig, #ed-card[data-motion="push"] #ed-fig {
+      animation: plateBreathe 14s ease-in-out infinite;
+      will-change: transform;
+    }
+    #flap-fig, #arc-figwrap, #ed-figwrap { overflow: hidden; }
+
+    /* the one plate that carries a photograph of people rather than a
+       drawing: 1872, the class on the rocks. It tilts to the pointer
+       and carries a sheen across the print, so it behaves like a thing
+       being turned to the light. The numbers come from the JS, which is
+       the only place that knows where the pointer is. */
+    #ed-figwrap { transition: transform .5s cubic-bezier(0.22, 1, 0.36, 1); }
+    #ed-card[data-motion="tilt"] #ed-figwrap {
+      transform: perspective(900px)
+                 rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg));
+      transform-style: preserve-3d;
+    }
+    #ed-card[data-motion="tilt"] #ed-figwrap.held { transition: transform .08s linear; }
+    #ed-card[data-motion="tilt"] #ed-figwrap::after {
+      content: ''; position: absolute; inset: 0; z-index: 2;
+      pointer-events: none;
+      background: radial-gradient(
+        420px circle at var(--gx, 50%) var(--gy, 50%),
+        rgba(255, 252, 240, .28), rgba(255, 252, 240, 0) 62%);
+      opacity: 0;
+      transition: opacity .45s ease;
+    }
+    #ed-card[data-motion="tilt"] #ed-figwrap.held::after { opacity: 1; }
+
+    @media (prefers-reduced-motion: reduce) {
+      #flap-wrap.is-in #flap,
+      #arc-wrap.is-in #arc,
+      #ed-card-wrap.is-in #ed-card,
+      #flap-wrap.is-in #flap-scroll > *,
+      #arc-wrap.is-in .arc-scroll > *,
+      #ed-card-wrap.is-in .ed-scroll > *,
+      #ed-card-wrap.is-in .ed-foot > * {
+        animation: none !important; opacity: 1; transform: none;
+      }
+      #flap-fig, #arc-fig, #ed-fig { animation: none !important; }
+      #ed-card[data-motion="tilt"] #ed-figwrap { transform: none !important; }
+      #ed-card[data-motion="tilt"] #ed-figwrap::after { display: none; }
+      .plate-x { transition-duration: .01ms; }
+    }
+    @media (max-width: 560px) {
+      #flap-scroll, .arc-scroll, .ed-scroll { padding: 24px 20px 10px; }
+      #flap-close,
+    #arc-close,
+    #qr-close,
+    #ed-card-x,
+    #ed-3d-x,
+    #s5-card-x { width: 34px; height: 34px; top: 10px; right: 10px; }
+    }
   </style>
 </head>
 <body>
@@ -4565,12 +4905,13 @@
   <button id="next-ch" type="button"><span class="cta-t"></span><svg class="cta-arrow" width="24" height="12" viewBox="0 0 24 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M1 8.5H22L15.5 2.5"/></svg></button>
 
   <div id="flap-wrap" role="dialog" aria-modal="true" aria-labelledby="flap-title" aria-hidden="true">
-    <article id="flap">
-      <button id="flap-close" type="button"><svg class="chop-ring" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path class="chop-o" fill-rule="evenodd" d="M42.63 22.00C42.61 23.77 42.31 25.62 41.79 27.30C41.27 28.99 40.42 30.61 39.49 32.10C38.57 33.59 37.49 35.03 36.24 36.24C34.99 37.45 33.54 38.55 32.02 39.35C30.49 40.15 28.77 40.60 27.10 41.05C25.44 41.50 23.75 41.83 22.00 42.03C20.25 42.23 18.34 42.52 16.58 42.23C14.82 41.95 12.93 41.28 11.43 40.31C9.92 39.35 8.67 37.83 7.56 36.44C6.44 35.05 5.54 33.52 4.73 31.97C3.93 30.42 3.18 28.83 2.73 27.16C2.28 25.50 2.06 23.73 2.03 22.00C2.01 20.27 2.19 18.49 2.57 16.79C2.96 15.09 3.51 13.34 4.33 11.80C5.16 10.26 6.30 8.80 7.53 7.53C8.76 6.26 10.21 5.14 11.72 4.19C13.23 3.24 14.88 2.29 16.60 1.83C18.31 1.37 20.25 1.23 22.00 1.43C23.75 1.63 25.47 2.40 27.09 3.02C28.71 3.64 30.20 4.37 31.73 5.15C33.26 5.94 34.91 6.65 36.27 7.73C37.63 8.82 38.94 10.18 39.89 11.67C40.84 13.16 41.49 14.93 41.95 16.66C42.40 18.38 42.66 20.23 42.63 22.00ZM39.55 22.00C39.62 23.55 39.78 25.14 39.58 26.71C39.38 28.28 39.08 30.03 38.36 31.44C37.63 32.86 36.42 34.17 35.21 35.21C34.00 36.25 32.50 37.03 31.07 37.71C29.64 38.39 28.15 38.95 26.63 39.30C25.12 39.64 23.54 39.81 22.00 39.80C20.46 39.78 18.89 39.57 17.39 39.22C15.88 38.87 14.32 38.41 12.94 37.69C11.57 36.96 10.23 35.98 9.11 34.89C8.00 33.79 7.07 32.45 6.23 31.10C5.40 29.75 4.58 28.32 4.08 26.80C3.58 25.28 3.17 23.58 3.25 22.00C3.32 20.42 3.90 18.77 4.51 17.31C5.13 15.86 6.08 14.59 6.92 13.29C7.76 12.00 8.54 10.71 9.54 9.54C10.54 8.37 11.64 7.16 12.92 6.27C14.20 5.39 15.73 4.70 17.24 4.23C18.75 3.77 20.41 3.51 22.00 3.50C23.59 3.48 25.26 3.70 26.78 4.16C28.30 4.62 29.76 5.41 31.09 6.25C32.43 7.09 33.69 8.10 34.78 9.22C35.88 10.34 36.94 11.59 37.67 12.95C38.40 14.32 38.83 15.90 39.14 17.41C39.45 18.91 39.47 20.45 39.55 22.00Z"/><path class="chop-i" d="M37.39 22.00C37.26 23.59 36.88 25.20 36.32 26.65C35.76 28.11 34.93 29.47 34.02 30.74C33.12 32.00 32.12 33.28 30.91 34.26C29.69 35.23 28.22 36.06 26.74 36.57C25.25 37.09 23.61 37.25 22.00 37.34C20.39 37.42 18.63 37.53 17.09 37.10C15.55 36.66 13.93 35.79 12.76 34.72C11.58 33.65 10.84 32.04 10.05 30.68C9.27 29.32 8.57 27.99 8.02 26.54C7.48 25.10 6.93 23.56 6.79 22.00C6.66 20.44 6.80 18.74 7.22 17.20C7.63 15.65 8.32 14.03 9.27 12.75C10.22 11.47 11.58 10.38 12.92 9.50C14.25 8.62 15.77 7.93 17.28 7.47C18.79 7.01 20.45 6.65 22.00 6.74C23.55 6.82 25.09 7.46 26.55 8.00C28.01 8.54 29.36 9.19 30.74 9.97C32.12 10.75 33.75 11.51 34.81 12.69C35.87 13.88 36.69 15.53 37.12 17.09C37.55 18.64 37.53 20.41 37.39 22.00Z"/></svg><span id="flap-close-glyph">閉</span></button>
+    <article id="flap" tabindex="-1">
+      <button id="flap-close" type="button"><svg class="plate-x" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M1.6 1.6 14.4 14.4M14.4 1.6 1.6 14.4"/></svg></button>
       <div id="flap-scroll">
         <img id="flap-fig" alt="">
         <p class="kicker" id="flap-kicker"></p>
         <h2 id="flap-title"></h2>
+        <p class="plate-sub" id="flap-sub"></p>
         <hr class="rule">
         <p class="body" id="flap-body"></p>
         <hr class="rule" id="flap-rule2">
@@ -4620,15 +4961,16 @@
 
   <!-- ---------------- the archive card ---------------- -->
   <div id="arc-wrap" role="dialog" aria-modal="true" aria-labelledby="arc-title" aria-hidden="true">
-    <article id="arc">
+    <article id="arc" tabindex="-1">
       <!-- The same classical box as the lift up card in chapter one. -->
-      <button id="arc-close" type="button" aria-label="關閉"><svg class="chop-ring" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path class="chop-o" fill-rule="evenodd" d="M42.63 22.00C42.61 23.77 42.31 25.62 41.79 27.30C41.27 28.99 40.42 30.61 39.49 32.10C38.57 33.59 37.49 35.03 36.24 36.24C34.99 37.45 33.54 38.55 32.02 39.35C30.49 40.15 28.77 40.60 27.10 41.05C25.44 41.50 23.75 41.83 22.00 42.03C20.25 42.23 18.34 42.52 16.58 42.23C14.82 41.95 12.93 41.28 11.43 40.31C9.92 39.35 8.67 37.83 7.56 36.44C6.44 35.05 5.54 33.52 4.73 31.97C3.93 30.42 3.18 28.83 2.73 27.16C2.28 25.50 2.06 23.73 2.03 22.00C2.01 20.27 2.19 18.49 2.57 16.79C2.96 15.09 3.51 13.34 4.33 11.80C5.16 10.26 6.30 8.80 7.53 7.53C8.76 6.26 10.21 5.14 11.72 4.19C13.23 3.24 14.88 2.29 16.60 1.83C18.31 1.37 20.25 1.23 22.00 1.43C23.75 1.63 25.47 2.40 27.09 3.02C28.71 3.64 30.20 4.37 31.73 5.15C33.26 5.94 34.91 6.65 36.27 7.73C37.63 8.82 38.94 10.18 39.89 11.67C40.84 13.16 41.49 14.93 41.95 16.66C42.40 18.38 42.66 20.23 42.63 22.00ZM39.55 22.00C39.62 23.55 39.78 25.14 39.58 26.71C39.38 28.28 39.08 30.03 38.36 31.44C37.63 32.86 36.42 34.17 35.21 35.21C34.00 36.25 32.50 37.03 31.07 37.71C29.64 38.39 28.15 38.95 26.63 39.30C25.12 39.64 23.54 39.81 22.00 39.80C20.46 39.78 18.89 39.57 17.39 39.22C15.88 38.87 14.32 38.41 12.94 37.69C11.57 36.96 10.23 35.98 9.11 34.89C8.00 33.79 7.07 32.45 6.23 31.10C5.40 29.75 4.58 28.32 4.08 26.80C3.58 25.28 3.17 23.58 3.25 22.00C3.32 20.42 3.90 18.77 4.51 17.31C5.13 15.86 6.08 14.59 6.92 13.29C7.76 12.00 8.54 10.71 9.54 9.54C10.54 8.37 11.64 7.16 12.92 6.27C14.20 5.39 15.73 4.70 17.24 4.23C18.75 3.77 20.41 3.51 22.00 3.50C23.59 3.48 25.26 3.70 26.78 4.16C28.30 4.62 29.76 5.41 31.09 6.25C32.43 7.09 33.69 8.10 34.78 9.22C35.88 10.34 36.94 11.59 37.67 12.95C38.40 14.32 38.83 15.90 39.14 17.41C39.45 18.91 39.47 20.45 39.55 22.00Z"/><path class="chop-i" d="M37.39 22.00C37.26 23.59 36.88 25.20 36.32 26.65C35.76 28.11 34.93 29.47 34.02 30.74C33.12 32.00 32.12 33.28 30.91 34.26C29.69 35.23 28.22 36.06 26.74 36.57C25.25 37.09 23.61 37.25 22.00 37.34C20.39 37.42 18.63 37.53 17.09 37.10C15.55 36.66 13.93 35.79 12.76 34.72C11.58 33.65 10.84 32.04 10.05 30.68C9.27 29.32 8.57 27.99 8.02 26.54C7.48 25.10 6.93 23.56 6.79 22.00C6.66 20.44 6.80 18.74 7.22 17.20C7.63 15.65 8.32 14.03 9.27 12.75C10.22 11.47 11.58 10.38 12.92 9.50C14.25 8.62 15.77 7.93 17.28 7.47C18.79 7.01 20.45 6.65 22.00 6.74C23.55 6.82 25.09 7.46 26.55 8.00C28.01 8.54 29.36 9.19 30.74 9.97C32.12 10.75 33.75 11.51 34.81 12.69C35.87 13.88 36.69 15.53 37.12 17.09C37.55 18.64 37.53 20.41 37.39 22.00Z"/></svg><span aria-hidden="true">閉</span></button>
+      <button id="arc-close" type="button" aria-label="關閉"><svg class="plate-x" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M1.6 1.6 14.4 14.4M14.4 1.6 1.6 14.4"/></svg></button>
       <div class="arc-scroll">
         <!-- The exhibit plate, hairline framed, the way chapter one opens
              its cards. -->
         <figure id="arc-figwrap"><img id="arc-fig" alt=""></figure>
         <p class="kicker" id="arc-kicker"></p>
         <h2 id="arc-title"></h2>
+        <p class="plate-sub" id="arc-sub"></p>
         <hr class="rule">
         <p class="body" id="arc-body"></p>
 
@@ -4659,8 +5001,8 @@
           <p id="portal-plate-b"></p>
         </figure>
 
-        <hr class="rule">
         <p class="body" id="arc-tail"></p>
+        <hr class="rule">
       </div>
       <div class="arc-foot">
         <button id="arc-ar" type="button"><span id="arc-ar-label"></span></button>
@@ -4672,8 +5014,8 @@
        A desktop screen cannot open a camera pass through, so the address
        is handed to a phone instead. -->
   <div id="qr-wrap" role="dialog" aria-modal="true" aria-labelledby="qr-title" aria-hidden="true">
-    <div id="qr-card">
-      <button id="qr-close" type="button" aria-label="返回"><svg class="chop-ring" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path class="chop-o" fill-rule="evenodd" d="M42.63 22.00C42.61 23.77 42.31 25.62 41.79 27.30C41.27 28.99 40.42 30.61 39.49 32.10C38.57 33.59 37.49 35.03 36.24 36.24C34.99 37.45 33.54 38.55 32.02 39.35C30.49 40.15 28.77 40.60 27.10 41.05C25.44 41.50 23.75 41.83 22.00 42.03C20.25 42.23 18.34 42.52 16.58 42.23C14.82 41.95 12.93 41.28 11.43 40.31C9.92 39.35 8.67 37.83 7.56 36.44C6.44 35.05 5.54 33.52 4.73 31.97C3.93 30.42 3.18 28.83 2.73 27.16C2.28 25.50 2.06 23.73 2.03 22.00C2.01 20.27 2.19 18.49 2.57 16.79C2.96 15.09 3.51 13.34 4.33 11.80C5.16 10.26 6.30 8.80 7.53 7.53C8.76 6.26 10.21 5.14 11.72 4.19C13.23 3.24 14.88 2.29 16.60 1.83C18.31 1.37 20.25 1.23 22.00 1.43C23.75 1.63 25.47 2.40 27.09 3.02C28.71 3.64 30.20 4.37 31.73 5.15C33.26 5.94 34.91 6.65 36.27 7.73C37.63 8.82 38.94 10.18 39.89 11.67C40.84 13.16 41.49 14.93 41.95 16.66C42.40 18.38 42.66 20.23 42.63 22.00ZM39.55 22.00C39.62 23.55 39.78 25.14 39.58 26.71C39.38 28.28 39.08 30.03 38.36 31.44C37.63 32.86 36.42 34.17 35.21 35.21C34.00 36.25 32.50 37.03 31.07 37.71C29.64 38.39 28.15 38.95 26.63 39.30C25.12 39.64 23.54 39.81 22.00 39.80C20.46 39.78 18.89 39.57 17.39 39.22C15.88 38.87 14.32 38.41 12.94 37.69C11.57 36.96 10.23 35.98 9.11 34.89C8.00 33.79 7.07 32.45 6.23 31.10C5.40 29.75 4.58 28.32 4.08 26.80C3.58 25.28 3.17 23.58 3.25 22.00C3.32 20.42 3.90 18.77 4.51 17.31C5.13 15.86 6.08 14.59 6.92 13.29C7.76 12.00 8.54 10.71 9.54 9.54C10.54 8.37 11.64 7.16 12.92 6.27C14.20 5.39 15.73 4.70 17.24 4.23C18.75 3.77 20.41 3.51 22.00 3.50C23.59 3.48 25.26 3.70 26.78 4.16C28.30 4.62 29.76 5.41 31.09 6.25C32.43 7.09 33.69 8.10 34.78 9.22C35.88 10.34 36.94 11.59 37.67 12.95C38.40 14.32 38.83 15.90 39.14 17.41C39.45 18.91 39.47 20.45 39.55 22.00Z"/><path class="chop-i" d="M37.39 22.00C37.26 23.59 36.88 25.20 36.32 26.65C35.76 28.11 34.93 29.47 34.02 30.74C33.12 32.00 32.12 33.28 30.91 34.26C29.69 35.23 28.22 36.06 26.74 36.57C25.25 37.09 23.61 37.25 22.00 37.34C20.39 37.42 18.63 37.53 17.09 37.10C15.55 36.66 13.93 35.79 12.76 34.72C11.58 33.65 10.84 32.04 10.05 30.68C9.27 29.32 8.57 27.99 8.02 26.54C7.48 25.10 6.93 23.56 6.79 22.00C6.66 20.44 6.80 18.74 7.22 17.20C7.63 15.65 8.32 14.03 9.27 12.75C10.22 11.47 11.58 10.38 12.92 9.50C14.25 8.62 15.77 7.93 17.28 7.47C18.79 7.01 20.45 6.65 22.00 6.74C23.55 6.82 25.09 7.46 26.55 8.00C28.01 8.54 29.36 9.19 30.74 9.97C32.12 10.75 33.75 11.51 34.81 12.69C35.87 13.88 36.69 15.53 37.12 17.09C37.55 18.64 37.53 20.41 37.39 22.00Z"/></svg><span aria-hidden="true">返</span></button>
+    <div id="qr-card" tabindex="-1">
+      <button id="qr-close" type="button" aria-label="返回"><svg class="plate-x" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M1.6 1.6 14.4 14.4M14.4 1.6 1.6 14.4"/></svg></button>
       <p class="kicker" id="qr-kicker"></p>
       <h3 id="qr-title"></h3>
       <div id="qr-plate"><canvas id="qr-canvas" aria-hidden="true"></canvas></div>
@@ -4753,17 +5095,17 @@
   <div id="ed-card-wrap" role="dialog" aria-modal="true" aria-labelledby="ed-title" aria-hidden="true">
     <div id="ed-stack">
       <span class="ed-under" aria-hidden="true"></span>
-      <article id="ed-card">
-        <button id="ed-card-x" type="button" aria-label="關閉"><svg class="chop-ring" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path class="chop-o" fill-rule="evenodd" d="M42.63 22.00C42.61 23.77 42.31 25.62 41.79 27.30C41.27 28.99 40.42 30.61 39.49 32.10C38.57 33.59 37.49 35.03 36.24 36.24C34.99 37.45 33.54 38.55 32.02 39.35C30.49 40.15 28.77 40.60 27.10 41.05C25.44 41.50 23.75 41.83 22.00 42.03C20.25 42.23 18.34 42.52 16.58 42.23C14.82 41.95 12.93 41.28 11.43 40.31C9.92 39.35 8.67 37.83 7.56 36.44C6.44 35.05 5.54 33.52 4.73 31.97C3.93 30.42 3.18 28.83 2.73 27.16C2.28 25.50 2.06 23.73 2.03 22.00C2.01 20.27 2.19 18.49 2.57 16.79C2.96 15.09 3.51 13.34 4.33 11.80C5.16 10.26 6.30 8.80 7.53 7.53C8.76 6.26 10.21 5.14 11.72 4.19C13.23 3.24 14.88 2.29 16.60 1.83C18.31 1.37 20.25 1.23 22.00 1.43C23.75 1.63 25.47 2.40 27.09 3.02C28.71 3.64 30.20 4.37 31.73 5.15C33.26 5.94 34.91 6.65 36.27 7.73C37.63 8.82 38.94 10.18 39.89 11.67C40.84 13.16 41.49 14.93 41.95 16.66C42.40 18.38 42.66 20.23 42.63 22.00ZM39.55 22.00C39.62 23.55 39.78 25.14 39.58 26.71C39.38 28.28 39.08 30.03 38.36 31.44C37.63 32.86 36.42 34.17 35.21 35.21C34.00 36.25 32.50 37.03 31.07 37.71C29.64 38.39 28.15 38.95 26.63 39.30C25.12 39.64 23.54 39.81 22.00 39.80C20.46 39.78 18.89 39.57 17.39 39.22C15.88 38.87 14.32 38.41 12.94 37.69C11.57 36.96 10.23 35.98 9.11 34.89C8.00 33.79 7.07 32.45 6.23 31.10C5.40 29.75 4.58 28.32 4.08 26.80C3.58 25.28 3.17 23.58 3.25 22.00C3.32 20.42 3.90 18.77 4.51 17.31C5.13 15.86 6.08 14.59 6.92 13.29C7.76 12.00 8.54 10.71 9.54 9.54C10.54 8.37 11.64 7.16 12.92 6.27C14.20 5.39 15.73 4.70 17.24 4.23C18.75 3.77 20.41 3.51 22.00 3.50C23.59 3.48 25.26 3.70 26.78 4.16C28.30 4.62 29.76 5.41 31.09 6.25C32.43 7.09 33.69 8.10 34.78 9.22C35.88 10.34 36.94 11.59 37.67 12.95C38.40 14.32 38.83 15.90 39.14 17.41C39.45 18.91 39.47 20.45 39.55 22.00Z"/><path class="chop-i" d="M37.39 22.00C37.26 23.59 36.88 25.20 36.32 26.65C35.76 28.11 34.93 29.47 34.02 30.74C33.12 32.00 32.12 33.28 30.91 34.26C29.69 35.23 28.22 36.06 26.74 36.57C25.25 37.09 23.61 37.25 22.00 37.34C20.39 37.42 18.63 37.53 17.09 37.10C15.55 36.66 13.93 35.79 12.76 34.72C11.58 33.65 10.84 32.04 10.05 30.68C9.27 29.32 8.57 27.99 8.02 26.54C7.48 25.10 6.93 23.56 6.79 22.00C6.66 20.44 6.80 18.74 7.22 17.20C7.63 15.65 8.32 14.03 9.27 12.75C10.22 11.47 11.58 10.38 12.92 9.50C14.25 8.62 15.77 7.93 17.28 7.47C18.79 7.01 20.45 6.65 22.00 6.74C23.55 6.82 25.09 7.46 26.55 8.00C28.01 8.54 29.36 9.19 30.74 9.97C32.12 10.75 33.75 11.51 34.81 12.69C35.87 13.88 36.69 15.53 37.12 17.09C37.55 18.64 37.53 20.41 37.39 22.00Z"/></svg><span aria-hidden="true">閉</span></button>
+      <article id="ed-card" tabindex="-1">
+        <button id="ed-card-x" type="button" aria-label="關閉"><svg class="plate-x" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M1.6 1.6 14.4 14.4M14.4 1.6 1.6 14.4"/></svg></button>
         <div class="ed-scroll">
           <figure id="ed-figwrap"><img id="ed-fig" alt=""></figure>
           <p class="kicker" id="ed-kicker"></p>
           <h2 id="ed-title"></h2>
-          <p id="ed-sub"></p>
+          <p class="plate-sub" id="ed-sub"></p>
           <hr class="rule">
           <p class="body" id="ed-body"></p>
-          <hr class="rule" id="ed-rule2">
           <p class="body" id="ed-tail"></p>
+          <hr class="rule" id="ed-rule2">
         </div>
         <div class="ed-foot">
           <button id="ed-ar" type="button" hidden><span class="cta-t"></span></button>
@@ -4775,7 +5117,7 @@
   <!-- The building, full screen. It used to sit inline in the card,
        below the fold of that card's own scroll area, which is both hard
        to reach and a small window on a large model. -->
-  <div id="ed-3d-wrap" role="dialog" aria-modal="true" aria-label="理學堂大書院 3D" aria-hidden="true">
+  <div id="ed-3d-wrap" tabindex="-1" role="dialog" aria-modal="true" aria-label="理學堂大書院 3D" aria-hidden="true">
     <div id="ed-3d">
       <div class="dust" aria-hidden="true"></div>
       <p class="waiting" id="ed-3d-wait"></p>
@@ -4785,7 +5127,7 @@
       <p id="ed-3d-cap"></p>
       <button id="ed-3d-ar" type="button" hidden><span class="cta-t"></span><svg class="cta-arrow" width="24" height="12" viewBox="0 0 24 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M1 8.5H22L15.5 2.5"/></svg></button>
     </div>
-    <button id="ed-3d-x" type="button" aria-label="關閉"><svg class="chop-ring" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path class="chop-o" fill-rule="evenodd" d="M42.63 22.00C42.61 23.77 42.31 25.62 41.79 27.30C41.27 28.99 40.42 30.61 39.49 32.10C38.57 33.59 37.49 35.03 36.24 36.24C34.99 37.45 33.54 38.55 32.02 39.35C30.49 40.15 28.77 40.60 27.10 41.05C25.44 41.50 23.75 41.83 22.00 42.03C20.25 42.23 18.34 42.52 16.58 42.23C14.82 41.95 12.93 41.28 11.43 40.31C9.92 39.35 8.67 37.83 7.56 36.44C6.44 35.05 5.54 33.52 4.73 31.97C3.93 30.42 3.18 28.83 2.73 27.16C2.28 25.50 2.06 23.73 2.03 22.00C2.01 20.27 2.19 18.49 2.57 16.79C2.96 15.09 3.51 13.34 4.33 11.80C5.16 10.26 6.30 8.80 7.53 7.53C8.76 6.26 10.21 5.14 11.72 4.19C13.23 3.24 14.88 2.29 16.60 1.83C18.31 1.37 20.25 1.23 22.00 1.43C23.75 1.63 25.47 2.40 27.09 3.02C28.71 3.64 30.20 4.37 31.73 5.15C33.26 5.94 34.91 6.65 36.27 7.73C37.63 8.82 38.94 10.18 39.89 11.67C40.84 13.16 41.49 14.93 41.95 16.66C42.40 18.38 42.66 20.23 42.63 22.00ZM39.55 22.00C39.62 23.55 39.78 25.14 39.58 26.71C39.38 28.28 39.08 30.03 38.36 31.44C37.63 32.86 36.42 34.17 35.21 35.21C34.00 36.25 32.50 37.03 31.07 37.71C29.64 38.39 28.15 38.95 26.63 39.30C25.12 39.64 23.54 39.81 22.00 39.80C20.46 39.78 18.89 39.57 17.39 39.22C15.88 38.87 14.32 38.41 12.94 37.69C11.57 36.96 10.23 35.98 9.11 34.89C8.00 33.79 7.07 32.45 6.23 31.10C5.40 29.75 4.58 28.32 4.08 26.80C3.58 25.28 3.17 23.58 3.25 22.00C3.32 20.42 3.90 18.77 4.51 17.31C5.13 15.86 6.08 14.59 6.92 13.29C7.76 12.00 8.54 10.71 9.54 9.54C10.54 8.37 11.64 7.16 12.92 6.27C14.20 5.39 15.73 4.70 17.24 4.23C18.75 3.77 20.41 3.51 22.00 3.50C23.59 3.48 25.26 3.70 26.78 4.16C28.30 4.62 29.76 5.41 31.09 6.25C32.43 7.09 33.69 8.10 34.78 9.22C35.88 10.34 36.94 11.59 37.67 12.95C38.40 14.32 38.83 15.90 39.14 17.41C39.45 18.91 39.47 20.45 39.55 22.00Z"/><path class="chop-i" d="M37.39 22.00C37.26 23.59 36.88 25.20 36.32 26.65C35.76 28.11 34.93 29.47 34.02 30.74C33.12 32.00 32.12 33.28 30.91 34.26C29.69 35.23 28.22 36.06 26.74 36.57C25.25 37.09 23.61 37.25 22.00 37.34C20.39 37.42 18.63 37.53 17.09 37.10C15.55 36.66 13.93 35.79 12.76 34.72C11.58 33.65 10.84 32.04 10.05 30.68C9.27 29.32 8.57 27.99 8.02 26.54C7.48 25.10 6.93 23.56 6.79 22.00C6.66 20.44 6.80 18.74 7.22 17.20C7.63 15.65 8.32 14.03 9.27 12.75C10.22 11.47 11.58 10.38 12.92 9.50C14.25 8.62 15.77 7.93 17.28 7.47C18.79 7.01 20.45 6.65 22.00 6.74C23.55 6.82 25.09 7.46 26.55 8.00C28.01 8.54 29.36 9.19 30.74 9.97C32.12 10.75 33.75 11.51 34.81 12.69C35.87 13.88 36.69 15.53 37.12 17.09C37.55 18.64 37.53 20.41 37.39 22.00Z"/></svg><span aria-hidden="true">閉</span></button>
+    <button id="ed-3d-x" type="button" aria-label="關閉"><svg class="plate-x" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M1.6 1.6 14.4 14.4M14.4 1.6 1.6 14.4"/></svg></button>
   </div>
 
   <button id="s3-next" type="button"><span class="cta-t"></span><svg class="cta-arrow" width="24" height="12" viewBox="0 0 24 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M1 8.5H22L15.5 2.5"/></svg></button>
@@ -4937,7 +5279,7 @@
   </div>
 
   <div id="s5-card" role="dialog" aria-labelledby="s5-card-t" aria-hidden="true">
-    <button id="s5-card-x" type="button" aria-label="關閉卡片"><svg class="chop-ring" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path class="chop-o" fill-rule="evenodd" d="M42.63 22.00C42.61 23.77 42.31 25.62 41.79 27.30C41.27 28.99 40.42 30.61 39.49 32.10C38.57 33.59 37.49 35.03 36.24 36.24C34.99 37.45 33.54 38.55 32.02 39.35C30.49 40.15 28.77 40.60 27.10 41.05C25.44 41.50 23.75 41.83 22.00 42.03C20.25 42.23 18.34 42.52 16.58 42.23C14.82 41.95 12.93 41.28 11.43 40.31C9.92 39.35 8.67 37.83 7.56 36.44C6.44 35.05 5.54 33.52 4.73 31.97C3.93 30.42 3.18 28.83 2.73 27.16C2.28 25.50 2.06 23.73 2.03 22.00C2.01 20.27 2.19 18.49 2.57 16.79C2.96 15.09 3.51 13.34 4.33 11.80C5.16 10.26 6.30 8.80 7.53 7.53C8.76 6.26 10.21 5.14 11.72 4.19C13.23 3.24 14.88 2.29 16.60 1.83C18.31 1.37 20.25 1.23 22.00 1.43C23.75 1.63 25.47 2.40 27.09 3.02C28.71 3.64 30.20 4.37 31.73 5.15C33.26 5.94 34.91 6.65 36.27 7.73C37.63 8.82 38.94 10.18 39.89 11.67C40.84 13.16 41.49 14.93 41.95 16.66C42.40 18.38 42.66 20.23 42.63 22.00ZM39.55 22.00C39.62 23.55 39.78 25.14 39.58 26.71C39.38 28.28 39.08 30.03 38.36 31.44C37.63 32.86 36.42 34.17 35.21 35.21C34.00 36.25 32.50 37.03 31.07 37.71C29.64 38.39 28.15 38.95 26.63 39.30C25.12 39.64 23.54 39.81 22.00 39.80C20.46 39.78 18.89 39.57 17.39 39.22C15.88 38.87 14.32 38.41 12.94 37.69C11.57 36.96 10.23 35.98 9.11 34.89C8.00 33.79 7.07 32.45 6.23 31.10C5.40 29.75 4.58 28.32 4.08 26.80C3.58 25.28 3.17 23.58 3.25 22.00C3.32 20.42 3.90 18.77 4.51 17.31C5.13 15.86 6.08 14.59 6.92 13.29C7.76 12.00 8.54 10.71 9.54 9.54C10.54 8.37 11.64 7.16 12.92 6.27C14.20 5.39 15.73 4.70 17.24 4.23C18.75 3.77 20.41 3.51 22.00 3.50C23.59 3.48 25.26 3.70 26.78 4.16C28.30 4.62 29.76 5.41 31.09 6.25C32.43 7.09 33.69 8.10 34.78 9.22C35.88 10.34 36.94 11.59 37.67 12.95C38.40 14.32 38.83 15.90 39.14 17.41C39.45 18.91 39.47 20.45 39.55 22.00Z"/><path class="chop-i" d="M37.39 22.00C37.26 23.59 36.88 25.20 36.32 26.65C35.76 28.11 34.93 29.47 34.02 30.74C33.12 32.00 32.12 33.28 30.91 34.26C29.69 35.23 28.22 36.06 26.74 36.57C25.25 37.09 23.61 37.25 22.00 37.34C20.39 37.42 18.63 37.53 17.09 37.10C15.55 36.66 13.93 35.79 12.76 34.72C11.58 33.65 10.84 32.04 10.05 30.68C9.27 29.32 8.57 27.99 8.02 26.54C7.48 25.10 6.93 23.56 6.79 22.00C6.66 20.44 6.80 18.74 7.22 17.20C7.63 15.65 8.32 14.03 9.27 12.75C10.22 11.47 11.58 10.38 12.92 9.50C14.25 8.62 15.77 7.93 17.28 7.47C18.79 7.01 20.45 6.65 22.00 6.74C23.55 6.82 25.09 7.46 26.55 8.00C28.01 8.54 29.36 9.19 30.74 9.97C32.12 10.75 33.75 11.51 34.81 12.69C35.87 13.88 36.69 15.53 37.12 17.09C37.55 18.64 37.53 20.41 37.39 22.00Z"/></svg><span aria-hidden="true">閉</span></button>
+    <button id="s5-card-x" type="button" aria-label="關閉卡片"><svg class="plate-x" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M1.6 1.6 14.4 14.4M14.4 1.6 1.6 14.4"/></svg></button>
     <!-- When a place that has already been finished is opened again, its
          own seal is pressed into the corner of the card in place of the
          answers. The story is still there to read; what is gone is the
@@ -5738,7 +6080,6 @@
         btn:    '展開航海地圖',
         count:  (n, t) => n + '/' + t,
         closeAria: '收合手記',
-        closeCard: '閉',
         closeCardAria: '關閉卡片',
         next:   '前往下一章 · 仁醫',
         locked: '先讀完上一站，路線才會往前延伸',
@@ -5746,15 +6087,15 @@
         tones:  '播放台語八聲',
         stamp:  '已探',
         cards: {
-          canada: { k: 'OCTOBER 1871', t: '從安大略出發',
+          canada: { k: 'OCTOBER 1871 · ONTARIO', t: '從安大略出發', s: 'DEPARTURE FROM ONTARIO',
             b: '1871 年 10 月，他離開安大略牛津郡的家，先橫越北美大陸，再從舊金山登船西行。他剛完成神學訓練，自願前往海外宣教。要去哪裡其實還沒定下來，只知道是中國的某個地方。' },
-          ship: { k: 'THE CROSSING', t: '海龍號與那條航線',
+          ship: { k: 'DECEMBER 1871 · THE PACIFIC', t: '海龍號與那條航線', s: 'THE CROSSING · THE HAI LOONG',
             b: '從舊金山出發，橫越太平洋，經橫濱、香港，1871 年 12 月 29 日在打狗上岸。北上淡水的最後一段，他搭的是沿西海岸跑的汽船海龍號。地圖上那條虛線畫的就是這段路。' },
-          takow: { k: 'EIGHT TONES', t: '先學會說話',
+          takow: { k: '1872 · TAKOW', t: '先學會說話', s: 'EIGHT TONES · LEARNING TO SPEAK FIRST',
             b: '他在南部待了兩個多月，沒有急著傳教，先學台語。方法很土：走到田邊跟人講話，聽到一個音就抄下來，自己整理出八個聲調的對照表。對他來說，學會這個語言是後面每一件事的前提。' },
-          suitcase: { k: 'ONE CASE', t: '一只皮箱的全部家當',
+          suitcase: { k: 'DECEMBER 1871 · TAKOW', t: '一只皮箱的全部家當', s: 'ONE CASE · EVERYTHING HE OWNED',
             b: '上岸那天，他的行李裡只有一本聖經、一把拔牙鉗，和一疊自己抄的台語八聲筆記。他沒有醫學學位，拔牙是在加拿大學來的實用技術，後來成了他和在地人建立信任最快的方式。' },
-          guanyin: { k: '9 MARCH 1872', t: '觀音山與落日誓言',
+          guanyin: { k: '9 MARCH 1872 · TAMSUI', t: '觀音山與落日誓言', s: 'GUANYIN MOUNTAIN · A VOW AT SUNSET',
             b: '1872 年 3 月 9 日下午，他在滬尾上岸，第一次看見淡水河對岸的觀音山。那年他還沒滿二十八歲，不會說北部的腔，也沒有人在這裡等他。他在日記裡寫下：「噢！值得讚美的上帝啊！這是我的宣教區。」往後二十九年，他再也沒有換過地方。' },
         },
       },
@@ -5763,7 +6104,6 @@
         btn:    'Unroll the Voyage Map',
         count:  (n, t) => n + '/' + t,
         closeAria: 'Fold the scroll',
-        closeCard: '閉',
         closeCardAria: 'Close card',
         next:   'Next chapter · Healing',
         locked: 'Read the station before it, and the route carries on',
@@ -5771,15 +6111,15 @@
         tones:  'Play the eight tones',
         stamp:  'READ',
         cards: {
-          canada: { k: 'OCTOBER 1871', t: 'Leaving Ontario',
+          canada: { k: 'OCTOBER 1871 · ONTARIO', t: 'Leaving Ontario', s: '從安大略出發',
             b: 'In October 1871 he left the family farm in Oxford County, Ontario, crossed North America, and boarded a ship west out of San Francisco. He had just finished his theological training and had volunteered for the foreign field. Where he was going was still unsettled. He knew only that it was somewhere in China.' },
-          ship: { k: 'THE CROSSING', t: 'The Hai Loong, and that Dotted Line',
+          ship: { k: 'DECEMBER 1871 · THE PACIFIC', t: 'The Hai Loong, and that Dotted Line', s: '海龍號與那條航線',
             b: 'From San Francisco he crossed the Pacific, called at Yokohama and Hong Kong, and landed at Takow on 29 December 1871. For the last leg north to Tamsui he took the Hai Loong, a steamer that worked the west coast. The dotted line on this map is that passage.' },
-          takow: { k: 'EIGHT TONES', t: 'Learning to Speak First',
+          takow: { k: '1872 · TAKOW', t: 'Learning to Speak First', s: '先學會說話',
             b: 'He spent a little over two months in the south and did not hurry to preach. He learned Taiwanese first, by a plain method: he walked out to the paddy fields, talked to whoever was there, wrote down every sound he heard, and built his own table of the eight tones. For him the language came before everything else.' },
-          suitcase: { k: 'ONE CASE', t: 'Everything He Owned',
+          suitcase: { k: 'DECEMBER 1871 · TAKOW', t: 'Everything He Owned', s: '一只皮箱的全部家當',
             b: 'On the day he landed his luggage held a Bible, a pair of tooth forceps, and a sheaf of his own notes on the eight tones. He had no medical degree. Pulling teeth was a practical skill he picked up in Canada, and it became the fastest way he had of earning trust.' },
-          guanyin: { k: '9 MARCH 1872', t: 'Guanyin Mountain, and a Vow at Sunset',
+          guanyin: { k: '9 MARCH 1872 · TAMSUI', t: 'Guanyin Mountain, and a Vow at Sunset', s: '觀音山與落日誓言',
             b: 'On the afternoon of 9 March 1872 he came ashore at Hobe and saw Guanyin Mountain across the Tamsui River for the first time. He was not yet twenty eight. He could not speak the northern accent, and nobody was waiting for him. In his diary he wrote: "Oh! Blessed Lord God, this is my mission field." Over the next twenty nine years he never moved on.' },
         },
       },
@@ -6087,16 +6427,17 @@
       ffig.alt = c.t;
       fkick.textContent = c.k;
       ftitle.textContent = c.t;
+      q('#flap-sub').textContent = c.s || '';
       fbody.textContent = c.b;
-      /* Only one station has a sound, so the rule above the button goes
-         with it rather than leaving a line under nothing. */
+      /* Only one station has a sound. The closing hairline stays either
+         way: it closes the reading, which every plate has, rather than
+         the button, which only this one does. */
       faudio.style.display = s.tones ? '' : 'none';
-      q('#flap-rule2').style.display = s.tones ? '' : 'none';
       falabel.textContent = t.tones;
       q('#flap-scroll').scrollTop = 0;
       fwrap.classList.add('is-in');
       fwrap.setAttribute('aria-hidden', 'false');
-      fclose.focus({ preventScroll: true });
+      q('#flap').focus({ preventScroll: true });
     }
 
     function closeCard() {
@@ -6213,7 +6554,6 @@
       btnLabel.textContent = t.btn;
       closeBtn.setAttribute('aria-label', t.closeAria);
       nextBtn.querySelector('.cta-t').textContent = t.next;
-      q('#flap-close-glyph').textContent = t.closeCard;
       fclose.setAttribute('aria-label', t.closeCardAria);
       falabel.textContent = t.tones;
       if (openIdx >= 0) openCard(openIdx);
@@ -6310,22 +6650,25 @@
         names: { medicine: '神奇白藥水', teeth: '傳奇拔牙鉗', clinic: '滬尾偕醫館' },
         arc: {
           medicine: {
-            k: 'QUININE SULPHATE',
+            k: '1872 · TAMSUI',
             t: '神奇白藥水',
+            s: 'QUININE SULPHATE · WHITE MEDICINE',
             b: '「聽說淡水馬偕牧師有神奇特效藥，大家都稱那是馬偕的神奇白藥水。」那是金雞納霜，也就是奎寧。淡水一帶瘧疾盛行，發作起來忽冷忽熱，當地人原本只能等它自己過去。馬偕把這種白色苦粉用紙一份一份包好發出去，常常混著甘汞一起給，病人隔天就能下床走路。',
             tail: '藥是從加拿大和廈門運來的，數量永遠不夠。他在日記裡算過，一天發出去幾十包，一年下來看了超過一萬人次。',
           },
           teeth: {
-            k: 'ONE HOUR, ONE HUNDRED TEETH',
+            k: '1872 · NORTHERN TAIWAN',
             t: '百顆拔牙傳奇',
+            s: 'ONE HOUR, ONE HUNDRED TEETH',
             b: '那時候沒有麻醉藥。馬偕讓病人站著，自己也站著，用一把鉗子把壞掉的牙拔下來，最快的時候一小時連拔一百多顆。拔完他會把牙齒放回病人手上，讓圍觀的人看見那不是法術，只是一顆壞掉的牙。',
             ca: '馬偕在野外為民眾拔牙，學生在一旁協助。一次出巡就能服務整個村落，廟埕和榕樹下都是他的診間。',
             cb: '馬偕使用的第一套拔牙鉗。1880 年他返國述職時送給學生陳榮輝，經其後代長期保存，再轉交淡江中學校長，家人後來託偕醫館保管至今。提供者：淡水教會。',
             tail: '拔牙不是傳教的手段，是他取得信任的方式。牙痛在當時沒有別的解法，一個外國人能在幾秒內把痛源拿掉，比任何話都有說服力。他一生估計拔了超過兩萬一千顆牙。',
           },
           clinic: {
-            k: '1873 · 2026',
+            k: '1873 · TAMSUI',
             t: '滬尾偕醫館，與它的後來',
+            s: 'THE HOBE MACKAY CLINIC · 1873 AND 2026',
             b: '1873 年，馬偕在租來的民房裡開始看診。1879 年，美國底特律的馬偕夫人（同姓，並非親屬）捐了三千美元，蓋起這間白牆拱窗的小醫館，是北台灣第一所西式醫院。',
             then: '1873 年 滬尾偕醫館', now: '現代 馬偕紀念醫院',
             tail: '拖動中線，看它變成今天的樣子。那間小醫館後來成了馬偕紀念醫院，一百五十年沒有離開過這條河。',
@@ -6351,22 +6694,25 @@
         names: { medicine: 'The White Medicine', teeth: 'The Forceps', clinic: 'The Hobe Clinic' },
         arc: {
           medicine: {
-            k: 'QUININE SULPHATE',
+            k: '1872 · TAMSUI',
             t: 'The Magic White Medicine',
+            s: '神奇白藥水',
             b: 'Word went around Tamsui that the foreign pastor had a miracle powder, and people called it Mackay’s magic white medicine. It was quinine, ground from cinchona bark. Malaria was everywhere along the river, and when it struck there was nothing to do but wait it out. Mackay folded the bitter white powder into paper doses and handed them out, often together with calomel, and patients were back on their feet the next day.',
             tail: 'The supply came from Canada and Amoy and was never enough. He counted the doses in his diary: dozens a day, and more than ten thousand consultations in a year.',
           },
           teeth: {
-            k: 'ONE HOUR, ONE HUNDRED TEETH',
+            k: '1872 · NORTHERN TAIWAN',
             t: 'Pulling Teeth',
+            s: '百顆拔牙傳奇',
             b: 'There was no anaesthetic. Mackay had the patient stand, stood himself, and took the bad tooth out with a pair of forceps. At his fastest he pulled more than a hundred in an hour. Afterwards he put the tooth back into the patient’s own hand, so the crowd could see it was not sorcery, only a bad tooth.',
             ca: 'Mackay pulling teeth in the open air, his students working beside him. One circuit could serve a whole village, and a temple forecourt or a banyan tree was the surgery.',
             cb: 'The first set of forceps Mackay used. He gave them to his student Tan Eng-hui when he sailed home in 1880. They passed down through the family, then to the principal of Tamkang High School, and the family later placed them with the Hobe Mackay Clinic, where they are kept. Lent by Tamsui Church.',
             tail: 'Pulling teeth was not a tactic for preaching. It was how he earned trust. Toothache had no other answer then, and a foreigner who could take the source of the pain away in seconds argued better than any sermon. He is reckoned to have pulled more than twenty one thousand teeth.',
           },
           clinic: {
-            k: '1873 · 2026',
+            k: '1873 · TAMSUI',
             t: 'The Hobe Clinic, and What Became of It',
+            s: '滬尾偕醫館，與它的後來',
             b: 'In 1873 Mackay began seeing patients in a rented house. In 1879 a Mrs. Mackay of Detroit, no relation, gave three thousand American dollars, and this small clinic with white walls and arched windows went up: the first Western hospital in northern Taiwan.',
             then: '1873 Hobe Mackay Clinic', now: 'Today Mackay Memorial Hospital',
             tail: 'Drag the seam to see what it became. The little clinic grew into the Mackay Memorial Hospital, and in a hundred and fifty years it has never left this river.',
@@ -7092,6 +7438,7 @@
       openId = id;
       q('#arc-kicker').textContent = c.k;
       q('#arc-title').textContent  = c.t;
+      q('#arc-sub').textContent    = c.s || '';
       q('#arc-body').textContent   = c.b;
       q('#arc-tail').textContent   = c.tail || '';
 
@@ -7142,7 +7489,7 @@
       arcWrap.setAttribute('aria-hidden', 'false');
       window.__stagePaused = true;
       syncFX();
-      q('#arc-close').focus({ preventScroll: true });
+      q('#arc').focus({ preventScroll: true });
     }
 
     function closeArc() {
@@ -7720,7 +8067,7 @@
       qrReturn = document.activeElement;
       qrWrap.classList.add('is-in');
       qrWrap.setAttribute('aria-hidden', 'false');
-      q('#qr-close').focus({ preventScroll: true });
+      q('#qr-card').focus({ preventScroll: true });
     }
     function closeQR() {
       qrWrap.classList.remove('is-in');
@@ -7759,7 +8106,7 @@
       qrReturn = document.activeElement;
       qrWrap.classList.add('is-in');
       qrWrap.setAttribute('aria-hidden', 'false');
-      q('#qr-close').focus({ preventScroll: true });
+      q('#qr-card').focus({ preventScroll: true });
     };
     q('#qr-close').addEventListener('click', closeQR);
     qrWrap.addEventListener('click', e => { if (e.target === qrWrap) closeQR(); });
@@ -9041,19 +9388,19 @@ function renderWatercolorStamp(text, tone, opts) {
         waiting: '書院正在升起…',
         fallenT: '這座校舍沒能傳過來',
         fallenB: '模型檔有 8 MB，連線慢的時候會等不到它。重新整理頁面可以再試一次；也可以用手機掃描 QR Code，直接在你的房間裡看它。',
-        veg: { k: '彩蛋 · 淡水餐桌', t: '馬偕的神奇菜園', s: "Mackay's Garden",
+        veg: { k: 'ASIDE · AT THE TAMSUI TABLE', t: '馬偕的神奇菜園', s: "Mackay's Garden",
                b: '馬偕從國外帶進番茄、紅蘿蔔、白蘿蔔、花椰菜和高麗菜，在淡水種了起來。番茄剛來的時候沒人敢吃，大家叫它「臭柿子」，覺得紅成那樣一定有毒。後來它上了餐桌，成了淡水人日常的一部分。',
                tail: '一所學校教的不只是書本。馬偕帶來的種子，最後長進了這座小鎮的廚房。' },
         card: {
-          openair: { k: '1872 · 淡水', t: '露天教育', s: 'Open-Air Education',
+          openair: { k: '1872 · TAMSUI', t: '露天教育', s: 'Open-Air Education',
             b: '1872 年起，馬偕在淡水的馬廄與大榕樹下開課。沒有固定教室，大自然就是課堂：他帶著學生在戶外讀聖經，也讀天文、地理、自然科學與醫學。學生跟著他走遍北臺灣，一邊行醫一邊上課。',
             tail: '照片裡的學生多半是跟著他翻山越嶺的本地青年。其中一位叫陳榮輝，1872 年十月起隨馬偕讀書。',
             bub: '戴白色遮陽帽、留著長鬍鬚的正是馬偕牧師，他正與學生坐在戶外岩石上討論功課。' },
-          oxford: { k: '1882 · 淡水', t: '理學堂大書院', s: 'Oxford College',
+          oxford: { k: '1882 · TAMSUI', t: '理學堂大書院', s: 'Oxford College',
             b: '1882 年，馬偕用家鄉加拿大牛津郡鄉親募來的款項蓋起這所學校，由他親自設計，坐北朝南、均衡對稱。清水磚與閩南瓦全部從廈門運來，紅磚外層刷上油漆防風雨，磚身比本地磚扁而長。屋脊上立著八座小佛塔，用來代替十字架。',
             tail: '陳榮輝 1872 年七月聽馬偕講道，十月起隨他讀書，1885 年五月十七日由馬偕親自封立，與嚴清華同為全臺最早的兩位本地牧師。父親在榕樹下聽課，兒子從馬偕蓋的學校畢業：兩代人，同一所學校。',
             bub: '右邊穿和服的年輕人是陳清忠，1907 年進牛津學堂、1912 年畢業，後來成為作育英才的師長。當年在榕樹下跟著馬偕讀書的，是他的父親陳榮輝。' },
-          girls: { k: '1883 · 淡水', t: '淡水女學堂', s: "Tamsui Girls' School",
+          girls: { k: '1883 · TAMSUI', t: '淡水女學堂', s: "Tamsui Girls' School",
             b: '1883 年，馬偕創辦全臺第一所女子學堂，1884 年正式開學。首批三十四位學生多半來自宜蘭的平埔族。在「女子無才便是德」的年代，這所學校讓女性第一次坐進教室。',
             tail: '照片是淡水女學校第一回同窗會的合影。前排那一整排神情自若的面孔，是臺灣第一代受過教育的女性。' },
         },
@@ -9076,19 +9423,19 @@ function renderWatercolorStamp(text, tone, opts) {
         waiting: 'The college is rising…',
         fallenT: 'The schoolhouse did not come through',
         fallenB: 'The model is 8 MB and a slow line can run out of time waiting for it. Reloading the page tries again; a phone can also scan the code and stand it in your room.',
-        veg: { k: 'Aside · at the Tamsui table', t: "Mackay's Garden", s: '馬偕的神奇菜園',
+        veg: { k: 'ASIDE · AT THE TAMSUI TABLE', t: "Mackay's Garden", s: '馬偕的神奇菜園',
                b: 'Mackay brought in tomatoes, carrots, white radish, cauliflower and cabbage, and grew them in Tamsui. Nobody would eat the tomato at first. They called it the stinking persimmon and were sure anything that red was poisonous. It reached the table in the end, and stayed.',
                tail: 'A school teaches more than books. The seeds he carried over ended up in the town\u2019s kitchens.' },
         card: {
-          openair: { k: '1872 · Tamsui', t: 'Open-Air Education', s: '露天教育',
+          openair: { k: '1872 · TAMSUI', t: 'Open-Air Education', s: '露天教育',
             b: 'From 1872 Mackay taught in a Tamsui stable and under a great banyan. There was no classroom: the outdoors was the lesson. He read scripture with his students there, and astronomy, geography, natural science and medicine with them too. They walked northern Taiwan at his side, treating the sick and studying as they went.',
             tail: 'Most of the students in this photograph were local young men who walked those hills with him. One of them was Tan Eng-hui, who began studying with Mackay in October 1872.',
             bub: 'The man in the white pith helmet with the long beard is Mackay, sitting out on the rocks going over the lesson with his students.' },
-          oxford: { k: '1882 · Tamsui', t: 'Oxford College', s: '理學堂大書院',
+          oxford: { k: '1882 · TAMSUI', t: 'Oxford College', s: '理學堂大書院',
             b: 'In 1882 Mackay built this school with money raised by his neighbours in Oxford County, Canada. He designed it himself: symmetrical, facing south. The facing brick and the Minnan roof tiles all came by ship from Xiamen, the brick painted on the outside against wind and rain, flatter and longer than local brick. Eight small pagodas stand along the ridge in place of crosses.',
             tail: 'Tan Eng-hui heard Mackay preach in July 1872 and began studying with him that October. On 17 May 1885 Mackay ordained him alongside Giam Chheng-hoa: the first two Taiwanese pastors on the island. The father sat under the banyan; the son graduated from the school the same man built.',
             bub: 'The young man on the right in the kimono is Tan Chheng-tiong, who entered Oxford College in 1907, graduated in 1912 and went on to teach. The one who studied under the banyan with Mackay was his father, Tan Eng-hui.' },
-          girls: { k: '1883 · Tamsui', t: "Tamsui Girls' School", s: '淡水女學堂',
+          girls: { k: '1883 · TAMSUI', t: "Tamsui Girls' School", s: '淡水女學堂',
             b: "In 1883 Mackay founded the first school for girls in Taiwan; it opened properly in 1884. Most of the first thirty-four students were Kavalan plains people from Yilan. In an age that held a woman was better off without learning, this school put women in a classroom for the first time.",
             tail: 'The photograph is the first reunion of Tamsui Girls\u2019 School. That front row of unhurried faces is the first generation of educated women in Taiwan.' },
         },
@@ -9327,6 +9674,10 @@ function renderWatercolorStamp(text, tone, opts) {
       q('#ed-tail').textContent   = c.tail || '';
 
       const fig = q('#ed-figwrap');
+      /* 1872's class on the rocks is a photograph of people, and that
+         one is held and turned to the light; the rest push slowly. */
+      q('#ed-card').dataset.motion = !stop ? 'none'
+                                   : stop.id === 'openair' ? 'tilt' : 'push';
       /* the garden card has no photograph, only words */
       fig.hidden = !stop;
       q('#ed-fig').src = stop ? PHOTO[stop.photo] : '';
@@ -9344,7 +9695,7 @@ function renderWatercolorStamp(text, tone, opts) {
       cardWrap.classList.add('is-in');
       cardWrap.setAttribute('aria-hidden', 'false');
       sync();
-      q('#ed-card-x').focus({ preventScroll: true });
+      q('#ed-card').focus({ preventScroll: true });
     }
 
     function shutCard() {
@@ -9420,6 +9771,43 @@ function renderWatercolorStamp(text, tone, opts) {
       }
       b.addEventListener('click', () => show(!b.classList.contains('on')));
     }
+
+    /* The plate that is held. Two and a half degrees at the corners,
+       which is enough for the paper to catch the light and not enough
+       to fight the words beside it; the sheen follows the pointer
+       across the print. Pointer only: a finger is already touching the
+       thing and does not need it, and a tilt under a thumb reads as a
+       wobble. */
+    (function () {
+      const card = q('#ed-card'), fig = q('#ed-figwrap');
+      if (!card || !fig || !matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+      const MAX = 2.5;
+      let frame = 0;
+      fig.addEventListener('pointermove', e => {
+        if (card.dataset.motion !== 'tilt') return;
+        if (frame) return;
+        frame = requestAnimationFrame(() => {
+          frame = 0;
+          const r = fig.getBoundingClientRect();
+          if (!r.width || !r.height) return;
+          const px = (e.clientX - r.left) / r.width;
+          const py = (e.clientY - r.top) / r.height;
+          fig.classList.add('held');
+          fig.style.setProperty('--ty', ((px - 0.5) * 2 * MAX).toFixed(2) + 'deg');
+          fig.style.setProperty('--tx', ((0.5 - py) * 2 * MAX).toFixed(2) + 'deg');
+          fig.style.setProperty('--gx', (px * 100).toFixed(1) + '%');
+          fig.style.setProperty('--gy', (py * 100).toFixed(1) + '%');
+        });
+      });
+      const rest = () => {
+        if (frame) { cancelAnimationFrame(frame); frame = 0; }
+        fig.classList.remove('held');
+        fig.style.setProperty('--tx', '0deg');
+        fig.style.setProperty('--ty', '0deg');
+      };
+      fig.addEventListener('pointerleave', rest);
+      fig.addEventListener('pointercancel', rest);
+    })();
 
     /* ---------------- the firefly ----------------
        Hover brightens it; a press sways the grass and opens the card.
@@ -9510,7 +9898,7 @@ function renderWatercolorStamp(text, tone, opts) {
       tdWrap.classList.add('is-in');
       tdWrap.setAttribute('aria-hidden', 'false');
       sync();
-      q('#ed-3d-x').focus({ preventScroll: true });
+      q('#ed-3d-wrap').focus({ preventScroll: true });
       build3D();
     }
     function shut3D() {
